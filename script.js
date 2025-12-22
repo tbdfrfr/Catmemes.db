@@ -1,22 +1,203 @@
 let allMemes = [];
 let filteredMemes = [];
+let currentFilter = 'all'; // 'all', 'image', 'video'
 
 // DOM elements
 const gallery = document.getElementById('gallery');
 const searchInput = document.getElementById('searchInput');
 const sortSelect = document.getElementById('sortSelect');
 const refreshBtn = document.getElementById('refreshBtn');
+const uploadBtn = document.getElementById('uploadBtn');
 const memeCount = document.getElementById('memeCount');
+const imageCount = document.getElementById('imageCount');
+const videoCount = document.getElementById('videoCount');
 const loading = document.getElementById('loading');
 const empty = document.getElementById('empty');
 
+// Upload modal elements
+const uploadModal = document.getElementById('uploadModal');
+const uploadModalClose = document.querySelector('.upload-modal-close');
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const memeName = document.getElementById('memeName');
+const uploadSubmit = document.getElementById('uploadSubmit');
+const preview = document.getElementById('preview');
+const previewMedia = document.getElementById('previewMedia');
+const uploadProgress = document.getElementById('uploadProgress');
+
+let selectedFile = null;
+
 // Load memes on page load
-document.addEventListener('DOMContentLoaded', loadMemes);
+document.addEventListener('DOMContentLoaded', () => {
+    loadMemes();
+    initScrollToTop();
+    addTooltips();
+});
 
 // Event listeners
 searchInput.addEventListener('input', filterMemes);
 sortSelect.addEventListener('change', sortMemes);
 refreshBtn.addEventListener('click', loadMemes);
+uploadBtn.addEventListener('click', openUploadModal);
+uploadModalClose.addEventListener('click', closeUploadModal);
+dropZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFileSelect);
+memeName.addEventListener('input', checkUploadReady);
+uploadSubmit.addEventListener('click', handleUpload);
+
+// Stat badge click handlers for filtering
+document.querySelector('.stat-badge:nth-child(1)').addEventListener('click', () => {
+    currentFilter = currentFilter === 'image' ? 'all' : 'image';
+    updateStatBadgeStyles();
+    filterMemes();
+});
+
+document.querySelector('.stat-badge:nth-child(2)').addEventListener('click', () => {
+    currentFilter = currentFilter === 'video' ? 'all' : 'video';
+    updateStatBadgeStyles();
+    filterMemes();
+});
+
+// Drag and drop handlers
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+});
+
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('drag-over');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length > 0) {
+        handleFileSelect({ target: { files: e.dataTransfer.files } });
+    }
+});
+
+// Close modal when clicking outside
+uploadModal.addEventListener('click', (e) => {
+    if (e.target === uploadModal) {
+        closeUploadModal();
+    }
+});
+
+function openUploadModal() {
+    uploadModal.classList.add('active');
+    resetUploadForm();
+}
+
+function closeUploadModal() {
+    uploadModal.classList.remove('active');
+    resetUploadForm();
+}
+
+function resetUploadForm() {
+    selectedFile = null;
+    fileInput.value = '';
+    memeName.value = '';
+    preview.style.display = 'none';
+    previewMedia.innerHTML = '';
+    uploadSubmit.disabled = true;
+    uploadProgress.style.display = 'none';
+    dropZone.style.display = 'block';
+}
+
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check if it's an image or video
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
+    if (!isImage && !isVideo) {
+        alert('Please select an image or video file!');
+        return;
+    }
+
+    selectedFile = file;
+    
+    // Auto-generate name from filename
+    const fileName = file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+    memeName.value = fileName;
+
+    // Show preview
+    previewMedia.innerHTML = '';
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        if (isImage) {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            previewMedia.appendChild(img);
+        } else {
+            const video = document.createElement('video');
+            video.src = e.target.result;
+            video.controls = true;
+            video.muted = true;
+            previewMedia.appendChild(video);
+        }
+        dropZone.style.display = 'none';
+        preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+
+    checkUploadReady();
+}
+
+function checkUploadReady() {
+    uploadSubmit.disabled = !(selectedFile && memeName.value.trim());
+}
+
+async function handleUpload() {
+    if (!selectedFile || !memeName.value.trim()) return;
+
+    const formData = new FormData();
+    const extension = selectedFile.name.split('.').pop();
+    const newFilename = `${memeName.value.trim()}.${extension}`;
+    formData.append('meme', selectedFile, newFilename);
+
+    uploadSubmit.disabled = true;
+    uploadProgress.style.display = 'block';
+    const progressFill = document.querySelector('.progress-fill');
+
+    try {
+        // Simulate progress animation
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 10;
+            if (progress <= 90) {
+                progressFill.style.width = progress + '%';
+            }
+        }, 100);
+
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+        });
+
+        clearInterval(progressInterval);
+        progressFill.style.width = '100%';
+
+        if (response.ok) {
+            setTimeout(() => {
+                closeUploadModal();
+                loadMemes();
+            }, 500);
+        } else {
+            const error = await response.json();
+            alert('Upload failed: ' + (error.error || 'Unknown error'));
+            uploadSubmit.disabled = false;
+            uploadProgress.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        alert('Upload failed! Make sure the server is running.');
+        uploadSubmit.disabled = false;
+        uploadProgress.style.display = 'none';
+    }
+}
 
 async function loadMemes() {
     loading.style.display = 'block';
@@ -29,6 +210,12 @@ async function loadMemes() {
         
         allMemes = data.memes || [];
         filteredMemes = [...allMemes];
+        
+        // Update counts
+        const images = allMemes.filter(m => m.type === 'image').length;
+        const videos = allMemes.filter(m => m.type === 'video').length;
+        imageCount.textContent = images;
+        videoCount.textContent = videos;
         
         if (allMemes.length === 0) {
             loading.style.display = 'none';
@@ -43,26 +230,49 @@ async function loadMemes() {
         console.error('Error loading memes:', error);
         loading.style.display = 'none';
         empty.style.display = 'block';
-        empty.textContent = 'Error loading memes. Make sure the server is running!';
+        empty.innerHTML = '<div class="empty-icon">⚠️</div><p>Error loading memes. Make sure the server is running!</p>';
     }
 }
 
 function filterMemes() {
     const searchTerm = searchInput.value.toLowerCase();
-    filteredMemes = allMemes.filter(meme => 
-        meme.name.toLowerCase().includes(searchTerm)
-    );
+    filteredMemes = allMemes.filter(meme => {
+        const matchesSearch = meme.name.toLowerCase().includes(searchTerm);
+        const matchesType = currentFilter === 'all' || meme.type === currentFilter;
+        return matchesSearch && matchesType;
+    });
+    updateFilterIndicator(searchTerm);
     displayMemes();
+}
+
+function updateStatBadgeStyles() {
+    const imageBadge = document.querySelector('.stat-badge:nth-child(1)');
+    const videoBadge = document.querySelector('.stat-badge:nth-child(2)');
+    
+    if (currentFilter === 'image') {
+        imageBadge.classList.add('active');
+        videoBadge.classList.remove('active');
+    } else if (currentFilter === 'video') {
+        videoBadge.classList.add('active');
+        imageBadge.classList.remove('active');
+    } else {
+        imageBadge.classList.remove('active');
+        videoBadge.classList.remove('active');
+    }
 }
 
 function sortMemes() {
     const sortBy = sortSelect.value;
     
     filteredMemes.sort((a, b) => {
-        if (sortBy === 'name') {
+        if (sortBy === 'votes') {
+            return (b.votes || 0) - (a.votes || 0);
+        } else if (sortBy === 'name') {
             return a.name.localeCompare(b.name);
         } else if (sortBy === 'date') {
             return new Date(b.date) - new Date(a.date);
+        } else if (sortBy === 'type') {
+            return a.type.localeCompare(b.type);
         }
         return 0;
     });
@@ -86,18 +296,53 @@ function createMemeCard(meme) {
     
     let mediaElement;
     if (meme.type === 'video') {
+        // Create video wrapper for better UI
+        const videoWrapper = document.createElement('div');
+        videoWrapper.className = 'video-wrapper';
+        
         mediaElement = document.createElement('video');
         mediaElement.src = `/memes/${encodeURIComponent(meme.filename)}`;
-        mediaElement.controls = true;
         mediaElement.loop = true;
         mediaElement.muted = true;
         mediaElement.playsInline = true;
         mediaElement.preload = 'metadata';
+        
+        // Auto-play on hover
+        videoWrapper.addEventListener('mouseenter', () => {
+            mediaElement.play().catch(e => console.log('Play failed:', e));
+        });
+        
+        videoWrapper.addEventListener('mouseleave', () => {
+            mediaElement.pause();
+            mediaElement.currentTime = 0;
+        });
+        
+        // Click to open fullscreen
+        videoWrapper.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openModal(meme);
+        });
+        
+        // Video overlay with play icon
+        const overlay = document.createElement('div');
+        overlay.className = 'video-overlay';
+        overlay.innerHTML = '<div class="play-icon">▶</div>';
+        
+        // Video badge
+        const badge = document.createElement('div');
+        badge.className = 'video-badge';
+        badge.textContent = '🎬 VIDEO';
+        
+        videoWrapper.appendChild(mediaElement);
+        videoWrapper.appendChild(overlay);
+        videoWrapper.appendChild(badge);
+        card.appendChild(videoWrapper);
     } else {
         mediaElement = document.createElement('img');
         mediaElement.src = `/memes/${encodeURIComponent(meme.filename)}`;
         mediaElement.alt = meme.name;
         mediaElement.loading = 'lazy';
+        card.appendChild(mediaElement);
     }
     
     const info = document.createElement('div');
@@ -105,46 +350,77 @@ function createMemeCard(meme) {
     
     const name = document.createElement('div');
     name.className = 'meme-name';
-    name.textContent = meme.name;
+    
+    // Highlight search term
+    const searchTerm = searchInput.value.toLowerCase();
+    if (searchTerm && meme.name.toLowerCase().includes(searchTerm)) {
+        const regex = new RegExp(`(${searchTerm})`, 'gi');
+        name.innerHTML = meme.name.replace(regex, '<mark>$1</mark>');
+    } else {
+        name.textContent = meme.name;
+    }
     
     const date = document.createElement('div');
     date.className = 'meme-date';
     date.textContent = new Date(meme.date).toLocaleDateString();
     
+    // Voting system
+    const voteContainer = document.createElement('div');
+    voteContainer.className = 'vote-container';
+    
+    const voteBtn = document.createElement('button');
+    voteBtn.className = 'vote-btn';
+    const hasVoted = checkIfVoted(meme.filename);
+    voteBtn.classList.toggle('voted', hasVoted);
+    voteBtn.innerHTML = hasVoted ? '❤️' : '🤍';
+    
+    const voteCount = document.createElement('span');
+    voteCount.className = 'vote-count';
+    voteCount.textContent = meme.votes || 0;
+    
+    voteBtn.onclick = async (e) => {
+        e.stopPropagation();
+        // Check if already voted on each click
+        const currentlyVoted = checkIfVoted(meme.filename);
+        if (!currentlyVoted) {
+            const success = await voteMeme(meme.filename);
+            if (success) {
+                voteBtn.classList.add('voted');
+                voteBtn.innerHTML = '❤️';
+                voteCount.textContent = parseInt(voteCount.textContent) + 1;
+                markAsVoted(meme.filename);
+                voteBtn.classList.add('vote-animation');
+                setTimeout(() => voteBtn.classList.remove('vote-animation'), 600);
+                // Update meme votes in allMemes array
+                const memeIndex = allMemes.findIndex(m => m.filename === meme.filename);
+                if (memeIndex !== -1) {
+                    allMemes[memeIndex].votes = parseInt(voteCount.textContent);
+                }
+            }
+        }
+    };
+    
+    voteContainer.appendChild(voteBtn);
+    voteContainer.appendChild(voteCount);
+    
     info.appendChild(name);
     info.appendChild(date);
-    card.appendChild(mediaElement);
+    info.appendChild(voteContainer);
     card.appendChild(info);
     
-    // Click to view fullsize
-    card.addEventListener('click', (e) => {
-        // Don't open modal if clicking on video controls
-        if (e.target.tagName !== 'VIDEO') {
-            openModal(mediaElement.src, meme.name, meme.type);
-        }
-    });
+    // Click to view fullsize (only for images, videos handle their own clicks)
+    if (meme.type === 'image') {
+        card.addEventListener('click', () => {
+            openModal(meme);
+        });
+    }
     
     return card;
 }
 
-function openModal(src, alt, type) {
+function openModal(meme) {
     const modal = document.createElement('div');
     modal.className = 'modal active';
-    
-    let mediaElement;
-    if (type === 'video') {
-        mediaElement = document.createElement('video');
-        mediaElement.className = 'modal-content';
-        mediaElement.src = src;
-        mediaElement.controls = true;
-        mediaElement.autoplay = true;
-        mediaElement.loop = true;
-    } else {
-        mediaElement = document.createElement('img');
-        mediaElement.className = 'modal-content';
-        mediaElement.src = src;
-        mediaElement.alt = alt;
-    }
     
     const close = document.createElement('span');
     close.className = 'modal-close';
@@ -152,7 +428,18 @@ function openModal(src, alt, type) {
     close.onclick = () => modal.remove();
     
     modal.appendChild(close);
-    modal.appendChild(mediaElement);
+    
+    if (meme.type === 'video') {
+        const videoPlayer = createCustomVideoPlayer(meme);
+        modal.appendChild(videoPlayer);
+    } else {
+        const img = document.createElement('img');
+        img.className = 'modal-content';
+        img.src = `/memes/${encodeURIComponent(meme.filename)}`;
+        img.alt = meme.name;
+        modal.appendChild(img);
+    }
+    
     modal.onclick = (e) => {
         if (e.target === modal) {
             modal.remove();
@@ -161,3 +448,183 @@ function openModal(src, alt, type) {
     
     document.body.appendChild(modal);
 }
+
+function createCustomVideoPlayer(meme) {
+    const container = document.createElement('div');
+    container.className = 'custom-video-player';
+    
+    const video = document.createElement('video');
+    video.className = 'modal-video';
+    video.src = `/memes/${encodeURIComponent(meme.filename)}`;
+    video.autoplay = true;
+    video.loop = true;
+    video.muted = false; // Unmute by default
+    video.playsInline = true;
+    
+    const controls = document.createElement('div');
+    controls.className = 'custom-video-controls';
+    
+    // Play/Pause button
+    const playBtn = document.createElement('button');
+    playBtn.className = 'control-btn play-pause-btn';
+    playBtn.innerHTML = '⏸';
+    playBtn.onclick = () => togglePlay(video, playBtn);
+    
+    // Timeline
+    const timeline = document.createElement('div');
+    timeline.className = 'video-timeline';
+    const progress = document.createElement('div');
+    progress.className = 'video-progress';
+    timeline.appendChild(progress);
+    
+    timeline.onclick = (e) => {
+        const rect = timeline.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        video.currentTime = pos * video.duration;
+    };
+    
+    // Update progress
+    video.ontimeupdate = () => {
+        const percent = (video.currentTime / video.duration) * 100;
+        progress.style.width = percent + '%';
+    };
+    
+    video.onended = () => {
+        playBtn.innerHTML = '▶';
+    };
+    
+    controls.appendChild(playBtn);
+    controls.appendChild(timeline);
+    
+    container.appendChild(video);
+    container.appendChild(controls);
+    
+    return container;
+}
+
+function togglePlay(video, btn) {
+    if (video.paused) {
+        video.play();
+        btn.innerHTML = '⏸';
+    } else {
+        video.pause();
+        btn.innerHTML = '▶';
+    }
+}
+
+// Voting functions
+function checkIfVoted(filename) {
+    const voted = localStorage.getItem('voted_memes');
+    if (!voted) return false;
+    const votedArray = JSON.parse(voted);
+    return votedArray.includes(filename);
+}
+
+function markAsVoted(filename) {
+    let voted = localStorage.getItem('voted_memes');
+    const votedArray = voted ? JSON.parse(voted) : [];
+    if (!votedArray.includes(filename)) {
+        votedArray.push(filename);
+        localStorage.setItem('voted_memes', JSON.stringify(votedArray));
+    }
+}
+
+async function voteMeme(filename) {
+    try {
+        const response = await fetch('/api/vote', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ filename })
+        });
+        
+        if (response.ok) {
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Vote error:', error);
+        return false;
+    }
+}
+
+// Scroll to top functionality
+function initScrollToTop() {
+    const scrollBtn = document.getElementById('scrollToTop');
+    
+    window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 300) {
+            scrollBtn.classList.add('visible');
+        } else {
+            scrollBtn.classList.remove('visible');
+        }
+    });
+    
+    scrollBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
+
+// Filter indicator
+function updateFilterIndicator(searchTerm) {
+    const indicator = document.getElementById('filterIndicator');
+    const filterText = indicator.querySelector('.filter-text');
+    const clearBtn = indicator.querySelector('.clear-filter');
+    
+    const hasSearch = searchTerm.length > 0;
+    const hasTypeFilter = currentFilter !== 'all';
+    
+    if (hasSearch || hasTypeFilter) {
+        let text = 'Filtering: ';
+        if (hasSearch) text += `"${searchTerm}"`;
+        if (hasSearch && hasTypeFilter) text += ' + ';
+        if (hasTypeFilter) text += `${currentFilter}s`;
+        
+        filterText.textContent = text;
+        indicator.style.display = 'flex';
+        
+        clearBtn.onclick = () => {
+            searchInput.value = '';
+            currentFilter = 'all';
+            updateStatBadgeStyles();
+            filterMemes();
+        };
+    } else {
+        indicator.style.display = 'none';
+    }
+}
+
+// Add tooltips
+function addTooltips() {
+    // Add tooltip to upload button
+    uploadBtn.setAttribute('title', 'Upload a new cat meme');
+    refreshBtn.setAttribute('title', 'Refresh meme list');
+    searchInput.setAttribute('title', 'Search memes by name');
+    sortSelect.setAttribute('title', 'Sort memes');
+}
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + K to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+    }
+    
+    // Escape to clear search
+    if (e.key === 'Escape' && document.activeElement === searchInput) {
+        searchInput.value = '';
+        searchInput.blur();
+        filterMemes();
+    }
+    
+    // U to open upload
+    if (e.key === 'u' && document.activeElement === document.body) {
+        openUploadModal();
+    }
+});

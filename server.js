@@ -1,9 +1,63 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 
 const app = express();
 const PORT = 3000;
+
+// Parse JSON bodies
+app.use(express.json());
+
+// Vote storage (in-memory, can be persisted to file if needed)
+const votesFile = path.join(__dirname, 'votes.json');
+let votes = {};
+
+// Load votes from file if it exists
+if (fs.existsSync(votesFile)) {
+    try {
+        votes = JSON.parse(fs.readFileSync(votesFile, 'utf8'));
+    } catch (e) {
+        votes = {};
+    }
+}
+
+// Save votes to file
+function saveVotes() {
+    fs.writeFileSync(votesFile, JSON.stringify(votes, null, 2));
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const memesFolder = path.join(__dirname, 'memes');
+        if (!fs.existsSync(memesFolder)) {
+            fs.mkdirSync(memesFolder);
+        }
+        cb(null, memesFolder);
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 50 * 1024 * 1024 // 50MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|gif|webp|bmp|mp4|webm|mov/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        
+        if (mimetype && extname) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only image and video files are allowed!'));
+        }
+    }
+});
 
 // Serve static files
 app.use(express.static(__dirname));
@@ -45,7 +99,8 @@ app.get('/api/memes', (req, res) => {
                 name: path.parse(file).name,
                 date: stats.mtime,
                 size: stats.size,
-                type: videoExtensions.includes(ext) ? 'video' : 'image'
+                type: videoExtensions.includes(ext) ? 'video' : 'image',
+                votes: votes[file] || 0
             };
         });
         
@@ -53,7 +108,56 @@ app.get('/api/memes', (req, res) => {
     });
 });
 
+// API endpoint to upload memes
+app.post('/api/upload', upload.single('meme'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+        
+        res.json({
+            success: true,
+            filename: req.file.filename,
+            message: 'File uploaded successfully!'
+        });
+    } catch (error) {
+        console.error('Upload error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// API endpoint to vote on a meme
+app.post('/api/vote', (req, res) => {
+    try {
+        const { filename } = req.body;
+        
+        if (!filename) {
+            return res.status(400).json({ error: 'Filename required' });
+        }
+        
+        // Initialize vote count if it doesn't exist
+        if (!votes[filename]) {
+            votes[filename] = 0;
+        }
+        
+        // Increment vote
+        votes[filename]++;
+        
+        // Save votes to file
+        saveVotes();
+        
+        res.json({
+            success: true,
+            votes: votes[filename]
+        });
+    } catch (error) {
+        console.error('Vote error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🐱 Cat Memes Database running at http://localhost:${PORT}`);
-    console.log(`📁 Add your cat memes to the "memes" folder`);
+    console.log(`📁 Memes folder: ${path.join(__dirname, 'memes')}`);
+    console.log(`📤 Upload memes through the web interface!`);
 });

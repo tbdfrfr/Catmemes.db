@@ -7,30 +7,92 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="background-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
     <header>
         <h1>🐱 Catmemes.db</h1>
         <p class="subtitle">Total Memes: <strong id="memeCount">0</strong></p>
+        <div class="header-stats">
+            <div class="stat-badge">
+                <span class="stat-icon">🖼️</span>
+                <span>Images: <strong id="imageCount">0</strong></span>
+            </div>
+            <div class="stat-badge">
+                <span class="stat-icon">🎬</span>
+                <span>Videos: <strong id="videoCount">0</strong></span>
+            </div>
+        </div>
     </header>
 
     <main>
         <div class="controls">
-            <input type="text" id="searchInput" placeholder="Search memes...">
+            <input type="text" id="searchInput" placeholder="🔍 Search memes...">
             <select id="sortSelect">
-                <option value="name">Sort by Name</option>
-                <option value="date">Sort by Date</option>
+                <option value="votes">❤️ Sort by Votes</option>
+                <option value="name">📝 Sort by Name</option>
+                <option value="date">📅 Sort by Date</option>
+                <option value="type">🎨 Sort by Type</option>
             </select>
-            <button id="refreshBtn">Refresh</button>
+            <button id="uploadBtn" class="upload-btn">📤 Upload Meme</button>
+            <button id="refreshBtn">🔄 Refresh</button>
         </div>
 
         <div id="gallery" class="gallery">
             <!-- Memes will be loaded here -->
         </div>
 
-        <div id="loading" class="loading">Loading memes...</div>
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading memes...</p>
+        </div>
         <div id="empty" class="empty" style="display: none;">
-            No memes found. Add some images to the "memes" folder!
+            <div class="empty-icon">📂</div>
+            <p>No memes found. Upload some cat memes!</p>
+        </div>
+        
+        <div id="filterIndicator" class="filter-indicator" style="display: none;">
+            <span class="filter-text"></span>
+            <button class="clear-filter">✕</button>
         </div>
     </main>
+
+    <button id="scrollToTop" class="scroll-to-top" title="Back to top">
+        <span>↑</span>
+    </button>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="upload-modal">
+        <div class="upload-modal-content">
+            <span class="upload-modal-close">&times;</span>
+            <h2>📤 Upload Cat Meme</h2>
+            <div class="upload-form">
+                <div class="file-drop-zone" id="dropZone">
+                    <div class="drop-icon">📁</div>
+                    <p>Drag & drop your meme here</p>
+                    <p class="drop-hint">or click to browse</p>
+                    <input type="file" id="fileInput" accept="image/*,video/*" hidden>
+                </div>
+                <div id="preview" class="preview" style="display: none;">
+                    <div id="previewMedia"></div>
+                </div>
+                <div class="form-group">
+                    <label for="memeName">Meme Name:</label>
+                    <input type="text" id="memeName" placeholder="Enter a catchy name..." autocomplete="off">
+                </div>
+                <button id="uploadSubmit" class="upload-submit" disabled>Upload Meme 🚀</button>
+                <div id="uploadProgress" class="upload-progress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p class="progress-text">Uploading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
