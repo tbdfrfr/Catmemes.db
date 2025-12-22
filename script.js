@@ -303,7 +303,7 @@ function createMemeCard(meme) {
         videoWrapper.className = 'video-wrapper';
         
         mediaElement = document.createElement('video');
-        mediaElement.src = `/memes/${encodeURIComponent(meme.filename)}`;
+        mediaElement.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
         mediaElement.loop = true;
         mediaElement.muted = true;
         mediaElement.playsInline = true;
@@ -341,7 +341,7 @@ function createMemeCard(meme) {
         card.appendChild(videoWrapper);
     } else {
         mediaElement = document.createElement('img');
-        mediaElement.src = `/memes/${encodeURIComponent(meme.filename)}`;
+        mediaElement.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
         mediaElement.alt = meme.name;
         mediaElement.loading = 'lazy';
         card.appendChild(mediaElement);
@@ -437,7 +437,7 @@ function openModal(meme) {
     } else {
         const img = document.createElement('img');
         img.className = 'modal-content';
-        img.src = `/memes/${encodeURIComponent(meme.filename)}`;
+        img.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
         img.alt = meme.name;
         modal.appendChild(img);
     }
@@ -457,7 +457,7 @@ function createCustomVideoPlayer(meme) {
     
     const video = document.createElement('video');
     video.className = 'modal-video';
-    video.src = `/memes/${encodeURIComponent(meme.filename)}`;
+    video.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
     video.autoplay = true;
     video.loop = true;
     video.muted = false; // Unmute by default
