@@ -1,10 +1,14 @@
-const express = require('express');
+ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const cors = require('cors');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// Enable CORS for all origins (adjust for production if needed)
+app.use(cors());
 
 // Parse JSON bodies
 app.use(express.json());

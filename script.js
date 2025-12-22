@@ -1,3 +1,5 @@
+import API_BASE_URL from './config.js';
+
 let allMemes = [];
 let filteredMemes = [];
 let currentFilter = 'all'; // 'all', 'image', 'video'
@@ -172,7 +174,7 @@ async function handleUpload() {
             }
         }, 100);
 
-        const response = await fetch('/api/upload', {
+        const response = await fetch(`${API_BASE_URL}/api/upload`, {
             method: 'POST',
             body: formData
         });
@@ -205,7 +207,7 @@ async function loadMemes() {
     empty.style.display = 'none';
 
     try {
-        const response = await fetch('/api/memes');
+        const response = await fetch(`${API_BASE_URL}/api/memes`);
         const data = await response.json();
         
         allMemes = data.memes || [];
@@ -531,7 +533,7 @@ function markAsVoted(filename) {
 
 async function voteMeme(filename) {
     try {
-        const response = await fetch('/api/vote', {
+        const response = await fetch(`${API_BASE_URL}/api/vote`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
