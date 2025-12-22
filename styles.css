@@ -952,6 +952,32 @@ main {
     transform: scale(0.95);
 }
 
+/* Custom play/pause icon */
+.play-icon {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    transition: all 0.3s ease;
+}
+
+/* Pause icon (two bars) */
+.play-pause-btn[data-playing="true"] .play-icon {
+    width: 12px;
+    height: 16px;
+    border: none;
+    background: linear-gradient(90deg, 
+        white 0%, white 35%, 
+        transparent 35%, transparent 65%, 
+        white 65%, white 100%);
+}
+
+/* Play icon (triangle) */
+.play-pause-btn[data-playing="false"] .play-icon {
+    border-width: 8px 0 8px 14px;
+    border-color: transparent transparent transparent white;
+    margin-left: 2px;
+}
+
 .video-timeline {
     flex: 1;
     height: 8px;
