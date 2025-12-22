@@ -11,7 +11,6 @@ A beautiful, interactive web application to browse, upload, and vote on cat meme
 - **Beautiful UI** - custom color palette with smooth animations
 - **Keyboard shortcuts** - press `U` to upload, `R` to refresh
 - **Sort options** - by votes, name, date, or type
-   ```
 
 ## Tech Stack
 
