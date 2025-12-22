@@ -1,4 +1,7 @@
-import API_BASE_URL from './config.js';
+// Configuration for API endpoint
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8080'
+    : 'https://catmemesdb-production.up.railway.app';
 
 let allMemes = [];
 let filteredMemes = [];
