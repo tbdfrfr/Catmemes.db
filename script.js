@@ -90,13 +90,11 @@ uploadModal.addEventListener('click', (e) => {
 
 function openUploadModal() {
     uploadModal.classList.add('active');
-    document.body.style.overflow = 'hidden';
     resetUploadForm();
 }
 
 function closeUploadModal() {
     uploadModal.classList.remove('active');
-    document.body.style.overflow = '';
     resetUploadForm();
 }
 
@@ -312,15 +310,7 @@ function createMemeCard(meme) {
         mediaElement.loop = true;
         mediaElement.muted = true;
         mediaElement.playsInline = true;
-        mediaElement.preload = 'auto';
-        mediaElement.style.backgroundColor = '#000';
-        
-        // Force load on mobile
-        mediaElement.addEventListener('loadedmetadata', () => {
-            if (mediaElement.paused) {
-                mediaElement.currentTime = 0.1; // Load first frame
-            }
-        });
+        mediaElement.preload = 'metadata';
         
         // Auto-play on hover
         videoWrapper.addEventListener('mouseenter', () => {
@@ -458,11 +448,9 @@ function openModal(meme) {
     modal.onclick = (e) => {
         if (e.target === modal) {
             modal.remove();
-            document.body.style.overflow = '';
         }
     };
     
-    document.body.style.overflow = 'hidden';
     document.body.appendChild(modal);
 }
 
@@ -484,8 +472,7 @@ function createCustomVideoPlayer(meme) {
     // Play/Pause button
     const playBtn = document.createElement('button');
     playBtn.className = 'control-btn play-pause-btn';
-    playBtn.setAttribute('data-playing', 'true');
-    playBtn.innerHTML = '<span class="play-icon"></span>';
+    playBtn.innerHTML = '⏸';
     playBtn.onclick = () => togglePlay(video, playBtn);
     
     // Timeline
@@ -508,7 +495,7 @@ function createCustomVideoPlayer(meme) {
     };
     
     video.onended = () => {
-        playBtn.setAttribute('data-playing', 'false');
+        playBtn.innerHTML = '▶';
     };
     
     controls.appendChild(playBtn);
@@ -523,10 +510,10 @@ function createCustomVideoPlayer(meme) {
 function togglePlay(video, btn) {
     if (video.paused) {
         video.play();
-        btn.setAttribute('data-playing', 'true');
+        btn.innerHTML = '⏸';
     } else {
         video.pause();
-        btn.setAttribute('data-playing', 'false');
+        btn.innerHTML = '▶';
     }
 }
 
