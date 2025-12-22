@@ -1,5 +1,7 @@
 node_modules/
 .vercel
+.railway
+.env
 votes.json
 memes/
 .DS_Store
