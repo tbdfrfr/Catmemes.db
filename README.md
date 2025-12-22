@@ -1,2 +1,1 @@
-# Catmemes.db
-cat meme database!
+literally just a cat meme database :3
