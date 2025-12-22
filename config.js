@@ -3,6 +3,6 @@
 // For production, use your deployed backend URL
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:8080'
-    : 'catmemesdb-production.up.railway.app'; // Replace with your Render backend URL
+    : 'https://catmemesdb-production.up.railway.app'; // Your Railway backend URL
 
 export default API_BASE_URL;
