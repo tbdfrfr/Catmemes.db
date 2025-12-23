@@ -6,6 +6,9 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 let allMemes = [];
 let filteredMemes = [];
 let currentFilter = 'all'; // 'all', 'image', 'video'
+let displayedCount = 0;
+const ITEMS_PER_PAGE = 20;
+let isLoadingMore = false;
 
 // DOM elements
 const gallery = document.getElementById('gallery');
@@ -37,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMemes();
     initScrollToTop();
     addTooltips();
+    setupInfiniteScroll();
 });
 
 // Event listeners
@@ -208,9 +212,13 @@ async function loadMemes() {
     loading.style.display = 'block';
     gallery.innerHTML = '';
     empty.style.display = 'none';
+    displayedCount = 0;
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/memes`);
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
         const data = await response.json();
         
         allMemes = data.memes || [];
@@ -235,7 +243,7 @@ async function loadMemes() {
         console.error('Error loading memes:', error);
         loading.style.display = 'none';
         empty.style.display = 'block';
-        empty.innerHTML = '<div class="empty-icon">⚠️</div><p>Error loading memes. Make sure the server is running!</p>';
+        empty.innerHTML = `<div class="empty-icon">⚠️</div><p>Error loading memes: ${error.message}</p>`;
     }
 }
 
@@ -287,11 +295,42 @@ function sortMemes() {
 
 function displayMemes() {
     gallery.innerHTML = '';
+    displayedCount = 0;
     memeCount.textContent = filteredMemes.length;
+    
+    loadMoreMemes();
+}
 
-    filteredMemes.forEach(meme => {
-        const card = createMemeCard(meme);
-        gallery.appendChild(card);
+function loadMoreMemes() {
+    if (isLoadingMore || displayedCount >= filteredMemes.length) return;
+    
+    isLoadingMore = true;
+    const end = Math.min(displayedCount + ITEMS_PER_PAGE, filteredMemes.length);
+    
+    // Use requestAnimationFrame for smoother rendering
+    requestAnimationFrame(() => {
+        for (let i = displayedCount; i < end; i++) {
+            const card = createMemeCard(filteredMemes[i]);
+            gallery.appendChild(card);
+        }
+        
+        displayedCount = end;
+        isLoadingMore = false;
+    });
+}
+
+function setupInfiniteScroll() {
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            const scrollPosition = window.innerHeight + window.scrollY;
+            const threshold = document.documentElement.scrollHeight - 500;
+            
+            if (scrollPosition >= threshold && !isLoadingMore) {
+                loadMoreMemes();
+            }
+        }, 100);
     });
 }
 
@@ -310,10 +349,8 @@ function createMemeCard(meme) {
         mediaElement.loop = true;
         mediaElement.muted = true;
         mediaElement.playsInline = true;
-        mediaElement.preload = 'auto'; // Changed from 'metadata' to 'auto' to load first frame
-        
-        // Load the first frame immediately
-        mediaElement.load();
+        mediaElement.preload = 'metadata';
+        mediaElement.style.backgroundColor = '#000';
         
         // Auto-play on hover
         videoWrapper.addEventListener('mouseenter', () => {
