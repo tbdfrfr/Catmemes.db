@@ -352,14 +352,24 @@ function createMemeCard(meme) {
         mediaElement.preload = 'metadata';
         mediaElement.style.backgroundColor = '#000';
         
-        // Auto-play on hover
+        // Force load first frame for mobile
+        mediaElement.addEventListener('loadeddata', () => {
+            if (mediaElement.readyState >= 2) {
+                mediaElement.currentTime = 0.01;
+            }
+        });
+        
+        // Try to load the video
+        mediaElement.load();
+        
+        // Auto-play on hover (desktop)
         videoWrapper.addEventListener('mouseenter', () => {
             mediaElement.play().catch(e => console.log('Play failed:', e));
         });
         
         videoWrapper.addEventListener('mouseleave', () => {
             mediaElement.pause();
-            mediaElement.currentTime = 0;
+            mediaElement.currentTime = 0.01;
         });
         
         // Click to open fullscreen
