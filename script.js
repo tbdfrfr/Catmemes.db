@@ -1077,20 +1077,37 @@ async function handleMobileLike() {
     const filename = this.dataset.filename;
     if (!filename || checkIfVoted(filename)) return;
     
+    // Immediate visual feedback (optimistic UI)
+    const meme = filteredMemes[currentMobileIndex];
+    const voteCountEl = this.querySelector('.mobile-vote-count');
+    const originalVotes = meme.votes || 0;
+    
+    this.classList.add('liked');
+    meme.votes = originalVotes + 1;
+    voteCountEl.textContent = meme.votes;
+    
+    // Scale animation for button press feedback
+    this.style.transform = 'scale(1.15)';
+    setTimeout(() => {
+        this.style.transform = 'scale(1)';
+    }, 150);
+    
+    // Heart animation
+    const heart = document.createElement('div');
+    heart.textContent = '❤️';
+    heart.style.cssText = 'position:fixed;left:50%;top:50%;font-size:80px;animation:heartFloat 1s ease;z-index:20000;pointer-events:none;';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 1000);
+    
+    // Now send to API
     const success = await voteMeme(filename);
     if (success) {
         markAsVoted(filename);
-        const meme = filteredMemes[currentMobileIndex];
-        meme.votes = (meme.votes || 0) + 1;
-        this.classList.add('liked');
-        this.querySelector('.mobile-vote-count').textContent = meme.votes;
-        
-        // Heart animation
-        const heart = document.createElement('div');
-        heart.textContent = '❤️';
-        heart.style.cssText = 'position:fixed;left:50%;top:50%;font-size:80px;animation:heartFloat 1s ease;z-index:20000;pointer-events:none;';
-        document.body.appendChild(heart);
-        setTimeout(() => heart.remove(), 1000);
+    } else {
+        // Revert on failure
+        this.classList.remove('liked');
+        meme.votes = originalVotes;
+        voteCountEl.textContent = meme.votes;
     }
 }
 
