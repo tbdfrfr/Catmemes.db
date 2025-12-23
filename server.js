@@ -18,8 +18,17 @@ app.use(cors({
 // Parse JSON bodies
 app.use(express.json());
 
-// Vote storage (in-memory, can be persisted to file if needed)
-const votesFile = path.join(__dirname, 'votes.json');
+// Use Railway volume for persistent storage, fallback to local for development
+const STORAGE_PATH = process.env.RAILWAY_VOLUME_MOUNT_PATH || __dirname;
+const memesFolder = path.join(STORAGE_PATH, 'memes');
+const votesFile = path.join(STORAGE_PATH, 'votes.json');
+
+// Ensure memes folder exists
+if (!fs.existsSync(memesFolder)) {
+    fs.mkdirSync(memesFolder, { recursive: true });
+}
+
+// Vote storage
 let votes = {};
 
 // Load votes from file if it exists
@@ -39,10 +48,6 @@ function saveVotes() {
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const memesFolder = path.join(__dirname, 'memes');
-        if (!fs.existsSync(memesFolder)) {
-            fs.mkdirSync(memesFolder);
-        }
         cb(null, memesFolder);
     },
     filename: (req, file, cb) => {
@@ -74,15 +79,13 @@ const upload = multer({
 app.use(express.static(__dirname));
 
 // Serve memes folder
-app.use('/memes', express.static(path.join(__dirname, 'memes')));
+app.use('/memes', express.static(memesFolder));
 
 // API endpoint to get all memes
 app.get('/api/memes', (req, res) => {
-    const memesFolder = path.join(__dirname, 'memes');
-    
     // Create memes folder if it doesn't exist
     if (!fs.existsSync(memesFolder)) {
-        fs.mkdirSync(memesFolder);
+        fs.mkdirSync(memesFolder, { recursive: true });
     }
     
     fs.readdir(memesFolder, (err, files) => {
