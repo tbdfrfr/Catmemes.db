@@ -76,11 +76,19 @@ const upload = multer({
     }
 });
 
-// Serve static files
-app.use(express.static(__dirname));
+// Serve static files (only in development, not needed for production when frontend is on GitHub Pages)
+if (process.env.NODE_ENV !== 'production') {
+    app.use(express.static(__dirname));
+}
 
-// Serve memes folder
-app.use('/memes', express.static(memesFolder));
+// Serve memes folder with proper headers
+app.use('/memes', express.static(memesFolder, {
+    setHeaders: (res, path) => {
+        // Set appropriate content-type and CORS headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    }
+}));
 
 // API endpoint to get all memes
 app.get('/api/memes', (req, res) => {

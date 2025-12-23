@@ -3,6 +3,9 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
     ? 'http://localhost:8080'
     : 'https://catmemesdb-production.up.railway.app';
 
+console.log('Cat Memes DB: API Base URL:', API_BASE_URL);
+console.log('Cat Memes DB: Current hostname:', window.location.hostname);
+
 let allMemes = [];
 let filteredMemes = [];
 let currentFilter = 'all'; // 'all', 'image', 'video'
@@ -229,6 +232,7 @@ async function handleUpload() {
 }
 
 async function loadMemes() {
+    console.log('Loading memes from:', API_BASE_URL + '/api/memes');
     if (!isMobile) {
         loading.style.display = 'block';
         gallery.innerHTML = '';
@@ -238,10 +242,12 @@ async function loadMemes() {
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/memes`);
+        console.log('Response status:', response.status);
         if (!response.ok) {
             throw new Error(`Server error: ${response.status}`);
         }
         const data = await response.json();
+        console.log('Loaded memes:', data.memes.length, 'memes');
         
         allMemes = data.memes || [];
         filteredMemes = [...allMemes];
@@ -415,7 +421,9 @@ function createMemeCard(meme) {
         videoWrapper.className = 'video-wrapper';
         
         mediaElement = document.createElement('video');
-        mediaElement.dataset.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`; // Store URL in dataset
+        const videoUrl = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
+        console.log('Creating video element:', videoUrl);
+        mediaElement.dataset.src = videoUrl; // Store URL in dataset
         mediaElement.loop = true;
         mediaElement.muted = true;
         mediaElement.playsInline = true;
@@ -482,9 +490,23 @@ function createMemeCard(meme) {
         card.appendChild(videoWrapper);
     } else {
         mediaElement = document.createElement('img');
-        mediaElement.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
+        const imageUrl = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
+        console.log('Creating image element:', imageUrl);
+        mediaElement.src = imageUrl;
         mediaElement.alt = meme.name;
         mediaElement.loading = 'lazy';
+        
+        // Add error handler for images
+        mediaElement.onerror = function() {
+            console.error('Failed to load image:', imageUrl);
+            this.alt = `Failed to load: ${meme.name}`;
+            this.style.backgroundColor = '#f0f0f0';
+        };
+        
+        mediaElement.onload = function() {
+            console.log('Successfully loaded image:', imageUrl);
+        };
+        
         card.appendChild(mediaElement);
     }
     
