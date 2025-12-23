@@ -1382,6 +1382,11 @@ main {
         font-size: 28px;
         z-index: 10;
         transition: all 0.3s ease;
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
     }
     
     .mobile-like-btn:active {

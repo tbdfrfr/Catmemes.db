@@ -1027,8 +1027,22 @@ function setupMobileViewer() {
     // Upload
     uploadBtn.addEventListener('click', openUploadModal);
     
-    // Like
-    likeBtn.addEventListener('click', handleMobileLike);
+    // Like - use touchend for better mobile responsiveness
+    let touchHandled = false;
+    likeBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        touchHandled = true;
+        handleMobileLike(e);
+        setTimeout(() => { touchHandled = false; }, 300);
+    });
+    likeBtn.addEventListener('click', (e) => {
+        if (!touchHandled) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleMobileLike(e);
+        }
+    });
 }
 
 function renderMobileMeme() {
@@ -1073,8 +1087,9 @@ function renderMobileMeme() {
     likeBtn.dataset.filename = meme.filename;
 }
 
-async function handleMobileLike() {
-    const filename = this.dataset.filename;
+async function handleMobileLike(e) {
+    const likeBtn = e ? e.currentTarget : document.getElementById('mobileLikeBtn');
+    const filename = likeBtn.dataset.filename;
     if (!filename || checkIfVoted(filename)) return;
     
     const success = await voteMeme(filename);
@@ -1082,8 +1097,8 @@ async function handleMobileLike() {
         addVotedMeme(filename);
         const meme = filteredMemes[currentMobileIndex];
         meme.votes = (meme.votes || 0) + 1;
-        this.classList.add('liked');
-        this.querySelector('.mobile-vote-count').textContent = meme.votes;
+        likeBtn.classList.add('liked');
+        likeBtn.querySelector('.mobile-vote-count').textContent = meme.votes;
         
         // Heart animation
         const heart = document.createElement('div');
