@@ -1,6 +1,6 @@
 # Cat Memes Database 🐱
 
-A beautiful, interactive web application to browse, upload, and vote on cat memes with a custom color palette and smooth animations.
+WORKS BEST ON DESKTOP!!!!
 
 ## Features
 
@@ -29,17 +29,6 @@ A beautiful, interactive web application to browse, upload, and vote on cat meme
 5. Go to **Settings** → **Networking** → **Generate Domain**
 6. Copy your URL: `https://your-app.up.railway.app`
 
-### 2. Update Frontend Config
-Edit `config.js` line 6 with your Railway URL:
-```javascript
-: 'https://your-app.up.railway.app';
-```
-
-### 3. Enable GitHub Pages
-Go to repo **Settings** → **Pages** → set **Source** to `main` branch → **Save**
-
-Your site will be live at: `https://tbdfrfr.github.io/Catmemes.db/`
-
 ### Managing Uploads
 Use Railway CLI to remove unwanted files:
 ```bash
@@ -48,7 +37,6 @@ cd memes
 rm unwanted-file.jpg
 ```
 
-**Storage**: Railway free plan includes **5GB persistent storage** - uploads stay forever!
 
 ## Color Palette
 
