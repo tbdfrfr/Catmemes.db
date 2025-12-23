@@ -16,93 +16,100 @@ const isMobile = window.innerWidth <= 768;
 let currentMobileIndex = 0;
 let touchStartY = 0;
 
-// DOM elements - conditionally set based on mobile/desktop
-const gallery = !isMobile ? document.getElementById('gallery') : null;
-const searchInput = document.getElementById('searchInput');
-const sortSelect = !isMobile ? document.getElementById('sortSelect') : null;
-const refreshBtn = !isMobile ? document.getElementById('refreshBtn') : null;
-const uploadBtn = document.getElementById('uploadBtn');
-const memeCount = !isMobile ? document.getElementById('memeCount') : null;
-const imageCount = !isMobile ? document.getElementById('imageCount') : null;
-const videoCount = !isMobile ? document.getElementById('videoCount') : null;
-const loading = !isMobile ? document.getElementById('loading') : null;
-const empty = !isMobile ? document.getElementById('empty') : null;
-
-// Upload modal elements
-const uploadModal = document.getElementById('uploadModal');
-const uploadModalClose = document.querySelector('.upload-modal-close');
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const memeName = document.getElementById('memeName');
-const uploadSubmit = document.getElementById('uploadSubmit');
-const preview = document.getElementById('preview');
-const previewMedia = document.getElementById('previewMedia');
-const uploadProgress = document.getElementById('uploadProgress');
+// DOM elements - will be initialized after DOMContentLoaded
+let gallery, searchInput, sortSelect, refreshBtn, uploadBtn, memeCount, imageCount, videoCount, loading, empty;
+let uploadModal, uploadModalClose, dropZone, fileInput, memeName, uploadSubmit, preview, previewMedia, uploadProgress;
 
 let selectedFile = null;
 
 // Load memes on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize DOM elements
+    gallery = !isMobile ? document.getElementById('gallery') : null;
+    searchInput = document.getElementById('searchInput');
+    sortSelect = !isMobile ? document.getElementById('sortSelect') : null;
+    refreshBtn = !isMobile ? document.getElementById('refreshBtn') : null;
+    uploadBtn = document.getElementById('uploadBtn');
+    memeCount = !isMobile ? document.getElementById('memeCount') : null;
+    imageCount = !isMobile ? document.getElementById('imageCount') : null;
+    videoCount = !isMobile ? document.getElementById('videoCount') : null;
+    loading = !isMobile ? document.getElementById('loading') : null;
+    empty = !isMobile ? document.getElementById('empty') : null;
+    
+    // Upload modal elements
+    uploadModal = document.getElementById('uploadModal');
+    uploadModalClose = document.querySelector('.upload-modal-close');
+    dropZone = document.getElementById('dropZone');
+    fileInput = document.getElementById('fileInput');
+    memeName = document.getElementById('memeName');
+    uploadSubmit = document.getElementById('uploadSubmit');
+    preview = document.getElementById('preview');
+    previewMedia = document.getElementById('previewMedia');
+    uploadProgress = document.getElementById('uploadProgress');
+    
+    // Set up event listeners
+    if (!isMobile) {
+        searchInput.addEventListener('input', filterMemes);
+        sortSelect.addEventListener('change', sortMemes);
+        refreshBtn.addEventListener('click', loadMemes);
+        
+        // Stat badge click handlers for filtering
+        document.querySelector('.stat-badge:nth-child(1)').addEventListener('click', () => {
+            currentFilter = currentFilter === 'image' ? 'all' : 'image';
+            updateStatBadgeStyles();
+            filterMemes();
+        });
+
+        document.querySelector('.stat-badge:nth-child(2)').addEventListener('click', () => {
+            currentFilter = currentFilter === 'video' ? 'all' : 'video';
+            updateStatBadgeStyles();
+            filterMemes();
+        });
+    }
+    
+    uploadBtn.addEventListener('click', openUploadModal);
+    uploadModalClose.addEventListener('click', closeUploadModal);
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileSelect);
+    memeName.addEventListener('input', checkUploadReady);
+    uploadSubmit.addEventListener('click', handleUpload);
+    
+    // Drag and drop handlers
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) {
+            handleFileSelect({ target: { files: e.dataTransfer.files } });
+        }
+    });
+
+    // Close modal when clicking outside
+    uploadModal.addEventListener('click', (e) => {
+        if (e.target === uploadModal) {
+            closeUploadModal();
+        }
+    });
+    
+    // Set up mobile or desktop
     if (isMobile) {
         setupMobileViewer();
-    }
-    loadMemes();
-    if (!isMobile) {
+    } else {
         initScrollToTop();
         addTooltips();
         setupInfiniteScroll();
     }
-});
-
-// Event listeners (desktop only)
-if (!isMobile) {
-    searchInput.addEventListener('input', filterMemes);
-    sortSelect.addEventListener('change', sortMemes);
-    refreshBtn.addEventListener('click', loadMemes);
     
-    // Stat badge click handlers for filtering
-    document.querySelector('.stat-badge:nth-child(1)').addEventListener('click', () => {
-        currentFilter = currentFilter === 'image' ? 'all' : 'image';
-        updateStatBadgeStyles();
-        filterMemes();
-    });
-
-    document.querySelector('.stat-badge:nth-child(2)').addEventListener('click', () => {
-        currentFilter = currentFilter === 'video' ? 'all' : 'video';
-        updateStatBadgeStyles();
-        filterMemes();
-    });
-}
-uploadBtn.addEventListener('click', openUploadModal);
-uploadModalClose.addEventListener('click', closeUploadModal);
-dropZone.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', handleFileSelect);
-memeName.addEventListener('input', checkUploadReady);
-uploadSubmit.addEventListener('click', handleUpload);
-
-// Drag and drop handlers
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('drag-over');
-});
-
-dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('drag-over');
-});
-
-dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    if (e.dataTransfer.files.length > 0) {
-        handleFileSelect({ target: { files: e.dataTransfer.files } });
-    }
-});
-
-// Close modal when clicking outside
-uploadModal.addEventListener('click', (e) => {
-    if (e.target === uploadModal) {
-        closeUploadModal();
-    }
+    // Load memes
+    loadMemes();
 });
 
 function openUploadModal() {
