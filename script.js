@@ -995,6 +995,7 @@ function setupMobileViewer() {
             if (diff > 0 && currentMobileIndex < filteredMemes.length - 1) {
                 currentMobileIndex++;
                 renderMobileMeme();
+                // After user interaction, subsequent videos can play with sound
             } else if (diff < 0 && currentMobileIndex > 0) {
                 currentMobileIndex--;
                 renderMobileMeme();
@@ -1002,11 +1003,16 @@ function setupMobileViewer() {
         }
     });
     
-    // Tap to pause video
+    // Tap to pause/play video and unmute
     container.addEventListener('click', e => {
         const video = container.querySelector('video');
         if (video) {
-            video.paused ? video.play() : video.pause();
+            if (video.paused) {
+                video.muted = false; // Ensure sound is on when user interacts
+                video.play();
+            } else {
+                video.pause();
+            }
         }
     });
     
@@ -1044,7 +1050,14 @@ function renderMobileMeme() {
         media.autoplay = true;
         media.loop = true;
         media.playsInline = true;
-        media.muted = false;
+        media.muted = false; // Enable sound for mobile
+        
+        // Try to play with sound, fallback to muted if blocked
+        media.play().catch(err => {
+            console.log('Autoplay with sound blocked, trying muted:', err);
+            media.muted = true;
+            media.play().catch(e => console.log('Muted autoplay also failed:', e));
+        });
     } else {
         media = document.createElement('img');
         media.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
