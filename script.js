@@ -222,9 +222,11 @@ async function handleUpload() {
 }
 
 async function loadMemes() {
-    loading.style.display = 'block';
-    gallery.innerHTML = '';
-    empty.style.display = 'none';
+    if (!isMobile) {
+        loading.style.display = 'block';
+        gallery.innerHTML = '';
+        empty.style.display = 'none';
+    }
     displayedCount = 0;
 
     try {
@@ -237,26 +239,38 @@ async function loadMemes() {
         allMemes = data.memes || [];
         filteredMemes = [...allMemes];
         
-        // Update counts
-        const images = allMemes.filter(m => m.type === 'image').length;
-        const videos = allMemes.filter(m => m.type === 'video').length;
-        imageCount.textContent = images;
-        videoCount.textContent = videos;
+        if (!isMobile) {
+            // Update counts
+            const images = allMemes.filter(m => m.type === 'image').length;
+            const videos = allMemes.filter(m => m.type === 'video').length;
+            imageCount.textContent = images;
+            videoCount.textContent = videos;
+        }
         
         if (allMemes.length === 0) {
-            loading.style.display = 'none';
-            empty.style.display = 'block';
-            memeCount.textContent = '0';
+            if (!isMobile) {
+                loading.style.display = 'none';
+                empty.style.display = 'block';
+                memeCount.textContent = '0';
+            }
         } else {
-            sortMemes();
+            if (!isMobile) {
+                sortMemes();
+            }
             displayMemes();
-            loading.style.display = 'none';
+            if (!isMobile) {
+                loading.style.display = 'none';
+            }
         }
     } catch (error) {
         console.error('Error loading memes:', error);
-        loading.style.display = 'none';
-        empty.style.display = 'block';
-        empty.innerHTML = `<div class="empty-icon">⚠️</div><p>Error loading memes: ${error.message}</p>`;
+        if (!isMobile) {
+            loading.style.display = 'none';
+            empty.style.display = 'block';
+            empty.innerHTML = `<div class="empty-icon">⚠️</div><p>Error loading memes: ${error.message}</p>`;
+        } else {
+            alert(`Error loading memes: ${error.message}`);
+        }
     }
 }
 
