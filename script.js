@@ -1079,7 +1079,7 @@ async function handleMobileLike() {
     
     const success = await voteMeme(filename);
     if (success) {
-        addVotedMeme(filename);
+        markAsVoted(filename);
         const meme = filteredMemes[currentMobileIndex];
         meme.votes = (meme.votes || 0) + 1;
         this.classList.add('liked');
