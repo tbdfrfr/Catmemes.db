@@ -982,6 +982,21 @@ function setupMobileViewer() {
     const uploadBtn = document.getElementById('mobileUploadBtn');
     const likeBtn = document.getElementById('mobileLikeBtn');
     
+    // Add clear button to search
+    const searchContainer = searchInput.parentElement;
+    const clearBtn = document.createElement('button');
+    clearBtn.innerHTML = '✕';
+    clearBtn.style.cssText = 'position:absolute;right:58px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.3);color:white;font-size:16px;display:none;z-index:20;cursor:pointer;';
+    clearBtn.onclick = () => {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        filteredMemes = [...allMemes];
+        currentMobileIndex = 0;
+        renderMobileMeme();
+    };
+    searchContainer.style.position = 'relative';
+    searchContainer.appendChild(clearBtn);
+    
     // Swipe gestures
     container.addEventListener('touchstart', e => {
         touchStartY = e.touches[0].clientY;
@@ -1016,18 +1031,42 @@ function setupMobileViewer() {
         }
     });
     
-    // Search
+    // Search with clear button
     searchInput.addEventListener('input', () => {
         const query = searchInput.value.toLowerCase();
+        
+        // Show/hide clear button
+        clearBtn.style.display = query ? 'flex' : 'none';
+        
         filteredMemes = query ? allMemes.filter(m => m.name.toLowerCase().includes(query)) : [...allMemes];
         currentMobileIndex = 0;
-        renderMobileMeme();
+        if (filteredMemes.length > 0) {
+            renderMobileMeme();
+        } else {
+            // Show no results message
+            const container = document.querySelector('.mobile-media-container');
+            container.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#fff;font-size:18px;text-align:center;padding:20px;">No memes found 😿<br><small style="font-size:14px;opacity:0.7;margin-top:10px;display:block;">Try a different search</small></div>';
+        }
     });
     
-    // Upload
-    uploadBtn.addEventListener('click', openUploadModal);
+    // Clear search on double tap
+    let searchTapTimeout;
+    searchInput.addEventListener('focus', () => {
+        if (searchInput.value) {
+            searchInput.select();
+        }
+    });
     
-    // Like
+    // Upload button
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('Mobile upload button clicked');
+            openUploadModal();
+        });
+    }
+    
+    // Like button
     likeBtn.addEventListener('click', handleMobileLike);
 }
 
@@ -1073,17 +1112,28 @@ function renderMobileMeme() {
     likeBtn.dataset.filename = meme.filename;
 }
 
-async function handleMobileLike() {
-    const filename = this.dataset.filename;
-    if (!filename || checkIfVoted(filename)) return;
+async function handleMobileLike(e) {
+    e.stopPropagation(); // Prevent triggering video pause
+    const likeBtn = document.getElementById('mobileLikeBtn');
+    const filename = likeBtn.dataset.filename;
+    
+    if (!filename) {
+        console.log('No filename set');
+        return;
+    }
+    
+    if (checkIfVoted(filename)) {
+        console.log('Already voted for:', filename);
+        return;
+    }
     
     const success = await voteMeme(filename);
     if (success) {
-        addVotedMeme(filename);
+        markAsVoted(filename);
         const meme = filteredMemes[currentMobileIndex];
         meme.votes = (meme.votes || 0) + 1;
-        this.classList.add('liked');
-        this.querySelector('.mobile-vote-count').textContent = meme.votes;
+        likeBtn.classList.add('liked');
+        likeBtn.querySelector('.mobile-vote-count').textContent = meme.votes;
         
         // Heart animation
         const heart = document.createElement('div');
