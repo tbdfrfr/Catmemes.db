@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const cors = require('cors');
+const heicConvert = require('heic-convert');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -61,8 +62,8 @@ const upload = multer({
         fileSize: 50 * 1024 * 1024 // 50MB limit
     },
     fileFilter: (req, file, cb) => {
-        const allowedExtensions = /jpeg|jpg|png|gif|webp|bmp|mp4|webm|mov|avi|mkv/;
-        const allowedMimeTypes = /image\/(jpeg|jpg|png|gif|webp|bmp)|video\/(mp4|webm|quicktime|x-msvideo|x-matroska)/;
+        const allowedExtensions = /jpeg|jpg|png|gif|webp|bmp|heic|heif|mp4|webm|mov|avi|mkv/;
+        const allowedMimeTypes = /image\/(jpeg|jpg|png|gif|webp|bmp|heic|heif)|video\/(mp4|webm|quicktime|x-msvideo|x-matroska)/;
         
         const extname = allowedExtensions.test(path.extname(file.originalname).toLowerCase());
         const mimetype = allowedMimeTypes.test(file.mimetype);
@@ -123,15 +124,42 @@ app.get('/api/memes', (req, res) => {
 });
 
 // API endpoint to upload memes
-app.post('/api/upload', upload.single('meme'), (req, res) => {
+app.post('/api/upload', upload.single('meme'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
         
+        let filename = req.file.filename;
+        const ext = path.extname(req.file.filename).toLowerCase();
+        
+        // Convert HEIC/HEIF to JPEG for browser compatibility
+        if (ext === '.heic' || ext === '.heif') {
+            try {
+                const inputBuffer = fs.readFileSync(req.file.path);
+                const outputBuffer = await heicConvert({
+                    buffer: inputBuffer,
+                    format: 'JPEG',
+                    quality: 0.9
+                });
+                
+                // Replace .heic/.heif with .jpg
+                const newFilename = req.file.filename.replace(/\.(heic|heif)$/i, '.jpg');
+                const newPath = path.join(memesFolder, newFilename);
+                
+                fs.writeFileSync(newPath, outputBuffer);
+                fs.unlinkSync(req.file.path); // Delete original HEIC
+                
+                filename = newFilename;
+            } catch (conversionError) {
+                console.error('HEIC conversion error:', conversionError);
+                return res.status(500).json({ error: 'Failed to convert HEIC image' });
+            }
+        }
+        
         res.json({
             success: true,
-            filename: req.file.filename,
+            filename: filename,
             message: 'File uploaded successfully!'
         });
     } catch (error) {
