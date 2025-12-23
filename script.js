@@ -310,7 +310,10 @@ function createMemeCard(meme) {
         mediaElement.loop = true;
         mediaElement.muted = true;
         mediaElement.playsInline = true;
-        mediaElement.preload = 'metadata';
+        mediaElement.preload = 'auto'; // Changed from 'metadata' to 'auto' to load first frame
+        
+        // Load the first frame immediately
+        mediaElement.load();
         
         // Auto-play on hover
         videoWrapper.addEventListener('mouseenter', () => {
@@ -689,9 +692,14 @@ function optimizeVideoForMobile() {
     if (isMobile) {
         const videos = document.querySelectorAll('.meme-card video');
         videos.forEach(video => {
-            // Lazy load videos on mobile
-            video.setAttribute('preload', 'metadata');
+            // Keep preload as 'auto' to show first frame instead of black screen
+            // Don't change to 'metadata' as that causes black screen
             video.setAttribute('playsinline', ''); // Prevent fullscreen on iOS
+            
+            // Ensure first frame is loaded
+            if (video.readyState < 2) {
+                video.load();
+            }
             
             // Pause videos when they go out of view
             const observer = new IntersectionObserver((entries) => {
