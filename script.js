@@ -799,7 +799,7 @@ document.addEventListener('keydown', (e) => {
 // ============================================
 
 // Detect if user is on mobile device
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 // Prevent pull-to-refresh on mobile when scrolling at the top
@@ -846,7 +846,7 @@ if (isTouchDevice) {
 
 // Optimize video loading on mobile
 function optimizeVideoForMobile() {
-    if (isMobile) {
+    if (isMobileDevice) {
         const videos = document.querySelectorAll('.meme-card video');
         videos.forEach(video => {
             // Keep preload as 'auto' to show first frame instead of black screen
@@ -876,7 +876,7 @@ function optimizeVideoForMobile() {
 const originalRenderMemes = renderMemes;
 renderMemes = function(memes) {
     originalRenderMemes(memes);
-    if (isMobile) {
+    if (isMobileDevice) {
         setTimeout(optimizeVideoForMobile, 100);
     }
 };
@@ -967,7 +967,7 @@ if (isTouchDevice) {
 }
 
 // Log mobile device info for debugging
-if (isMobile) {
+if (isMobileDevice) {
     console.log('Mobile device detected');
     console.log('Screen size:', window.innerWidth, 'x', window.innerHeight);
     console.log('Device pixel ratio:', window.devicePixelRatio);
@@ -1084,7 +1084,7 @@ async function handleMobileLike() {
 // Override displayMemes for mobile
 const origDisplay = displayMemes;
 displayMemes = function() {
-    if (isMobile) {
+    if (isMobileDevice) {
         currentMobileIndex = 0;
         renderMobileMeme();
     } else {
@@ -1093,7 +1093,7 @@ displayMemes = function() {
 };
 
 // Heart animation CSS
-if (isMobile) {
+if (isMobileDevice) {
     const style = document.createElement('style');
     style.textContent = '@keyframes heartFloat { 0% { transform:translate(-50%,-50%) scale(0); opacity:1; } 50% { transform:translate(-50%,-50%) scale(1.2); } 100% { transform:translate(-50%,-60%) scale(1); opacity:0; } }';
     document.head.appendChild(style);
