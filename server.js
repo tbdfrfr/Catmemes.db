@@ -206,6 +206,21 @@ app.post('/api/vote', (req, res) => {
     }
 });
 
+// Reset all votes
+app.post('/api/reset-votes', (req, res) => {
+    try {
+        votes = {};
+        saveVotes();
+        res.json({
+            success: true,
+            message: 'All votes have been reset'
+        });
+    } catch (error) {
+        console.error('Reset votes error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🐱 Cat Memes Database running at http://localhost:${PORT}`);
     console.log(`📁 Memes folder: ${path.join(__dirname, 'memes')}`);
