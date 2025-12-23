@@ -1273,8 +1273,166 @@ main {
     }
 }
 
-/* Mobile Devices */
+/* Mobile TikTok-style Viewer (hidden on desktop) */
+.mobile-viewer {
+    display: none;
+}
+
 @media (max-width: 768px) {
+    /* Hide desktop layout on mobile */
+    .background-animation,
+    header,
+    main,
+    .scroll-to-top {
+        display: none !important;
+    }
+    
+    /* Show mobile viewer */
+    .mobile-viewer {
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 10000;
+    }
+    
+    .mobile-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 15px;
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+        background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+    }
+    
+    .mobile-search {
+        flex: 1;
+        padding: 12px 15px;
+        border-radius: 25px;
+        border: none;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        font-size: 14px;
+    }
+    
+    .mobile-search::placeholder {
+        color: rgba(255,255,255,0.7);
+    }
+    
+    .mobile-upload-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .mobile-media-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        touch-action: pan-y;
+    }
+    
+    .mobile-media-container img,
+    .mobile-media-container video {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    
+    .mobile-media-container video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .mobile-like-btn {
+        position: absolute;
+        right: 15px;
+        bottom: 120px;
+        width: 56px;
+        height: 70px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 28px;
+        color: white;
+        font-size: 28px;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+    
+    .mobile-like-btn:active {
+        transform: scale(0.9);
+    }
+    
+    .mobile-like-btn.liked {
+        background: rgba(247,160,114,0.4);
+    }
+    
+    .mobile-vote-count {
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .mobile-meme-info {
+        position: absolute;
+        left: 15px;
+        bottom: 100px;
+        right: 90px;
+        color: white;
+        z-index: 10;
+    }
+    
+    .mobile-meme-name {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+    
+    .mobile-position {
+        font-size: 13px;
+        opacity: 0.9;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+    
+    .mobile-swipe-hint {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        font-size: 13px;
+        opacity: 0.5;
+        animation: fadeInOut 2s infinite;
+    }
+}
+
+/* Original Mobile Styles - Keep Desktop Unchanged */
+@media (max-width: 768px) and (min-width: 1px) {
     body {
         padding: 10px;
     }

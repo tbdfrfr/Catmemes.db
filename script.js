@@ -11,6 +11,11 @@ const ITEMS_PER_PAGE = window.innerWidth < 768 ? 12 : 20; // Fewer items on mobi
 let isLoadingMore = false;
 let activeObservers = new Map(); // Track observers for cleanup
 
+// Mobile state
+const isMobile = window.innerWidth <= 768;
+let currentMobileIndex = 0;
+let touchStartY = 0;
+
 // DOM elements
 const gallery = document.getElementById('gallery');
 const searchInput = document.getElementById('searchInput');
@@ -38,16 +43,23 @@ let selectedFile = null;
 
 // Load memes on page load
 document.addEventListener('DOMContentLoaded', () => {
+    if (isMobile) {
+        setupMobileViewer();
+    }
     loadMemes();
-    initScrollToTop();
-    addTooltips();
-    setupInfiniteScroll();
+    if (!isMobile) {
+        initScrollToTop();
+        addTooltips();
+        setupInfiniteScroll();
+    }
 });
 
-// Event listeners
-searchInput.addEventListener('input', filterMemes);
-sortSelect.addEventListener('change', sortMemes);
-refreshBtn.addEventListener('click', loadMemes);
+// Event listeners (desktop only)
+if (!isMobile) {
+    searchInput.addEventListener('input', filterMemes);
+    sortSelect.addEventListener('change', sortMemes);
+    refreshBtn.addEventListener('click', loadMemes);
+}
 uploadBtn.addEventListener('click', openUploadModal);
 uploadModalClose.addEventListener('click', closeUploadModal);
 dropZone.addEventListener('click', () => fileInput.click());
@@ -908,4 +920,129 @@ if (isMobile) {
     console.log('Screen size:', window.innerWidth, 'x', window.innerHeight);
     console.log('Device pixel ratio:', window.devicePixelRatio);
     console.log('Touch support:', isTouchDevice);
+}
+
+// ========== MOBILE TIKTOK VIEWER ==========
+
+function setupMobileViewer() {
+    const container = document.querySelector('.mobile-media-container');
+    const searchInput = document.getElementById('mobileSearchInput');
+    const uploadBtn = document.getElementById('mobileUploadBtn');
+    const likeBtn = document.getElementById('mobileLikeBtn');
+    
+    // Swipe gestures
+    container.addEventListener('touchstart', e => {
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    container.addEventListener('touchend', e => {
+        const touchEndY = e.changedTouches[0].clientY;
+        const diff = touchStartY - touchEndY;
+        
+        if (Math.abs(diff) > 50) {
+            if (diff > 0 && currentMobileIndex < filteredMemes.length - 1) {
+                currentMobileIndex++;
+                renderMobileMeme();
+            } else if (diff < 0 && currentMobileIndex > 0) {
+                currentMobileIndex--;
+                renderMobileMeme();
+            }
+        }
+    });
+    
+    // Tap to pause video
+    container.addEventListener('click', e => {
+        const video = container.querySelector('video');
+        if (video) {
+            video.paused ? video.play() : video.pause();
+        }
+    });
+    
+    // Search
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase();
+        filteredMemes = query ? allMemes.filter(m => m.name.toLowerCase().includes(query)) : [...allMemes];
+        currentMobileIndex = 0;
+        renderMobileMeme();
+    });
+    
+    // Upload
+    uploadBtn.addEventListener('click', openUploadModal);
+    
+    // Like
+    likeBtn.addEventListener('click', handleMobileLike);
+}
+
+function renderMobileMeme() {
+    if (!filteredMemes.length) return;
+    
+    const meme = filteredMemes[currentMobileIndex];
+    const container = document.querySelector('.mobile-media-container');
+    const nameEl = document.querySelector('.mobile-meme-name');
+    const posEl = document.querySelector('.mobile-position');
+    const likeBtn = document.getElementById('mobileLikeBtn');
+    const voteCount = likeBtn.querySelector('.mobile-vote-count');
+    
+    container.innerHTML = '';
+    
+    let media;
+    if (meme.type === 'video') {
+        media = document.createElement('video');
+        media.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
+        media.autoplay = true;
+        media.loop = true;
+        media.playsInline = true;
+        media.muted = false;
+    } else {
+        media = document.createElement('img');
+        media.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
+        media.alt = meme.name;
+    }
+    
+    container.appendChild(media);
+    nameEl.textContent = meme.name;
+    posEl.textContent = `${currentMobileIndex + 1} / ${filteredMemes.length}`;
+    voteCount.textContent = meme.votes || 0;
+    
+    likeBtn.classList.toggle('liked', checkIfVoted(meme.filename));
+    likeBtn.dataset.filename = meme.filename;
+}
+
+async function handleMobileLike() {
+    const filename = this.dataset.filename;
+    if (!filename || checkIfVoted(filename)) return;
+    
+    const success = await voteMeme(filename);
+    if (success) {
+        addVotedMeme(filename);
+        const meme = filteredMemes[currentMobileIndex];
+        meme.votes = (meme.votes || 0) + 1;
+        this.classList.add('liked');
+        this.querySelector('.mobile-vote-count').textContent = meme.votes;
+        
+        // Heart animation
+        const heart = document.createElement('div');
+        heart.textContent = '❤️';
+        heart.style.cssText = 'position:fixed;left:50%;top:50%;font-size:80px;animation:heartFloat 1s ease;z-index:20000;pointer-events:none;';
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 1000);
+    }
+}
+
+// Override displayMemes for mobile
+const origDisplay = displayMemes;
+displayMemes = function() {
+    if (isMobile) {
+        currentMobileIndex = 0;
+        renderMobileMeme();
+    } else {
+        origDisplay();
+    }
+};
+
+// Heart animation CSS
+if (isMobile) {
+    const style = document.createElement('style');
+    style.textContent = '@keyframes heartFloat { 0% { transform:translate(-50%,-50%) scale(0); opacity:1; } 50% { transform:translate(-50%,-50%) scale(1.2); } 100% { transform:translate(-50%,-60%) scale(1); opacity:0; } }';
+    document.head.appendChild(style);
 }
