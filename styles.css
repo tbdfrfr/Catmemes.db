@@ -1367,11 +1367,11 @@ main {
     
     .meme-card img,
     .meme-card video {
-        height: 240px;
+        height: 280px;
     }
     
     .video-wrapper {
-        height: 240px;
+        height: 280px;
     }
     
     .meme-card:hover {
@@ -1547,11 +1547,11 @@ main {
     
     .meme-card img,
     .meme-card video {
-        height: 220px;
+        height: 250px;
     }
     
     .video-wrapper {
-        height: 220px;
+        height: 250px;
     }
     
     .play-icon {
@@ -1714,11 +1714,11 @@ main {
     
     .meme-card img,
     .meme-card video {
-        height: 200px;
+        height: 220px;
     }
     
     .video-wrapper {
-        height: 200px;
+        height: 220px;
     }
 }
 
