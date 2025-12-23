@@ -116,7 +116,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function openUploadModal() {
+    console.log('Opening upload modal, uploadModal element:', uploadModal);
+    if (!uploadModal) {
+        console.error('Upload modal element not found!');
+        return;
+    }
     uploadModal.classList.add('active');
+    console.log('Modal classes after opening:', uploadModal.className);
     resetUploadForm();
 }
 
@@ -1060,10 +1066,13 @@ function setupMobileViewer() {
     // Upload button
     if (uploadBtn) {
         uploadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
-            console.log('Mobile upload button clicked');
+            console.log('Mobile upload button clicked, calling openUploadModal');
             openUploadModal();
         });
+    } else {
+        console.error('Mobile upload button not found!');
     }
     
     // Like button

@@ -1019,7 +1019,7 @@ main {
 .upload-modal {
     display: none;
     position: fixed;
-    z-index: 2000;
+    z-index: 20000;
     top: 0;
     left: 0;
     width: 100%;
@@ -1588,6 +1588,10 @@ main {
     }
     
     /* Upload Modal */
+    .upload-modal {
+        z-index: 20000 !important;
+    }
+    
     .upload-modal-content {
         width: 90%;
         max-width: 90%;
@@ -1794,8 +1798,14 @@ main {
     }
     
     .upload-modal-close {
-        font-size: 28px;
-        padding: 5px;
+        font-size: 32px;
+        padding: 10px;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
     }
     
     .file-drop-zone {
