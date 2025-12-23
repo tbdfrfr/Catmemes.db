@@ -349,17 +349,26 @@ function createMemeCard(meme) {
         mediaElement.loop = true;
         mediaElement.muted = true;
         mediaElement.playsInline = true;
-        mediaElement.preload = 'metadata';
+        mediaElement.preload = 'auto';
         mediaElement.style.backgroundColor = '#000';
         
-        // Force load first frame for mobile
-        mediaElement.addEventListener('loadeddata', () => {
-            if (mediaElement.readyState >= 2) {
-                mediaElement.currentTime = 0.01;
+        // Aggressive loading for mobile - play then immediately pause
+        const forceLoadFrame = () => {
+            const playPromise = mediaElement.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    setTimeout(() => {
+                        mediaElement.pause();
+                        mediaElement.currentTime = 0;
+                    }, 100);
+                }).catch(() => {
+                    // If autoplay fails, try seeking
+                    mediaElement.currentTime = 0.1;
+                });
             }
-        });
+        };
         
-        // Try to load the video
+        mediaElement.addEventListener('loadedmetadata', forceLoadFrame);
         mediaElement.load();
         
         // Auto-play on hover (desktop)
@@ -369,7 +378,7 @@ function createMemeCard(meme) {
         
         videoWrapper.addEventListener('mouseleave', () => {
             mediaElement.pause();
-            mediaElement.currentTime = 0.01;
+            mediaElement.currentTime = 0;
         });
         
         // Click to open fullscreen
