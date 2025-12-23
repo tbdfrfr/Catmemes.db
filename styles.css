@@ -37,6 +37,15 @@ body {
     overflow-x: hidden;
 }
 
+/* Improve performance during scrolling on mobile */
+body.is-scrolling {
+    pointer-events: none;
+}
+
+body.is-scrolling * {
+    pointer-events: auto;
+}
+
 @keyframes gradientShift {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -1222,29 +1231,613 @@ main {
     font-weight: 600;
 }
 
-@media (max-width: 768px) {
+/* ============================================
+   MOBILE RESPONSIVE DESIGN
+   ============================================ */
+
+/* Tablet and Medium Screens */
+@media (max-width: 1024px) {
+    body {
+        padding: 15px;
+    }
+    
+    header {
+        padding: 30px 20px;
+        margin-bottom: 30px;
+    }
+    
     header h1 {
-        font-size: 2em;
+        font-size: 2.8em;
     }
     
     .gallery {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 15px;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
     }
     
     .controls {
+        padding: 20px;
+    }
+}
+
+/* Mobile Devices */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    /* Header Adjustments */
+    header {
+        padding: 25px 15px;
+        margin-bottom: 20px;
+        border-radius: 15px;
+    }
+    
+    header h1 {
+        font-size: 2.2em;
+        letter-spacing: -0.5px;
+    }
+    
+    .subtitle {
+        font-size: 1.1em;
+    }
+    
+    .header-stats {
+        gap: 12px;
+        margin-top: 15px;
+    }
+    
+    .stat-badge {
+        padding: 10px 18px;
+        font-size: 0.9em;
+        border-radius: 20px;
+    }
+    
+    .stat-icon {
+        font-size: 1em;
+    }
+    
+    /* Controls Section */
+    .controls {
         flex-direction: column;
+        gap: 12px;
+        padding: 18px;
+        margin-bottom: 20px;
+        border-radius: 12px;
     }
     
     #searchInput {
         min-width: 100%;
+        width: 100%;
+        padding: 12px 18px;
+        font-size: 16px; /* Prevent zoom on iOS */
     }
     
+    #sortSelect {
+        width: 100%;
+        padding: 12px 18px;
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+    
+    .upload-btn,
+    #refreshBtn {
+        width: 100%;
+        padding: 12px 24px;
+        font-size: 15px;
+    }
+    
+    /* Gallery Grid */
+    .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 18px;
+        margin-bottom: 30px;
+    }
+    
+    /* Meme Cards */
+    .meme-card {
+        border-radius: 15px;
+    }
+    
+    .meme-card::before {
+        border-radius: 17px;
+    }
+    
+    .meme-card::after {
+        border-radius: 15px;
+    }
+    
+    .meme-card img,
+    .meme-card video {
+        height: 280px;
+    }
+    
+    .video-wrapper {
+        height: 280px;
+    }
+    
+    .meme-card:hover {
+        transform: translateY(-8px) translateZ(0) scale(1.02);
+    }
+    
+    .meme-info {
+        padding: 16px;
+    }
+    
+    .meme-name {
+        font-size: 1em;
+    }
+    
+    .meme-date {
+        font-size: 0.85em;
+    }
+    
+    .vote-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+    }
+    
+    .vote-count {
+        font-size: 0.95em;
+    }
+    
+    /* Scroll to Top Button */
     .scroll-to-top {
         bottom: 20px;
         right: 20px;
+        width: 48px;
+        height: 48px;
+        font-size: 22px;
+    }
+    
+    /* Upload Modal */
+    .upload-modal-content {
+        width: 90%;
+        max-width: 90%;
+        margin: 10% auto;
+        padding: 25px 20px;
+        border-radius: 15px;
+    }
+    
+    .upload-modal-content h2 {
+        font-size: 1.5em;
+        margin-bottom: 20px;
+    }
+    
+    .file-drop-zone {
+        padding: 40px 20px;
+        border-radius: 12px;
+    }
+    
+    .drop-icon {
+        font-size: 3em;
+    }
+    
+    .file-drop-zone p {
+        font-size: 1em;
+    }
+    
+    .drop-hint {
+        font-size: 0.85em;
+    }
+    
+    .upload-submit {
+        padding: 12px 24px;
+        font-size: 15px;
+    }
+    
+    /* Loading and Empty States */
+    .loading,
+    .empty {
+        padding: 50px 20px;
+    }
+    
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .empty-icon {
+        font-size: 4em;
+    }
+    
+    /* Background Blobs - Reduce size for mobile */
+    .blob-1 {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .blob-2 {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .blob-3 {
+        width: 200px;
+        height: 200px;
+    }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+    body {
+        padding: 8px;
+    }
+    
+    /* Header Adjustments */
+    header {
+        padding: 20px 12px;
+        margin-bottom: 15px;
+        border-radius: 12px;
+    }
+    
+    header h1 {
+        font-size: 1.8em;
+    }
+    
+    .subtitle {
+        font-size: 1em;
+    }
+    
+    .header-stats {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .stat-badge {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 20px;
+    }
+    
+    /* Controls Section */
+    .controls {
+        padding: 15px;
+        gap: 10px;
+        border-radius: 10px;
+    }
+    
+    #searchInput,
+    #sortSelect,
+    .upload-btn,
+    #refreshBtn {
+        padding: 12px 16px;
+        font-size: 15px;
+        border-radius: 10px;
+    }
+    
+    /* Gallery Grid - Single Column */
+    .gallery {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    /* Meme Cards */
+    .meme-card {
+        border-radius: 12px;
+    }
+    
+    .meme-card::before {
+        border-radius: 14px;
+    }
+    
+    .meme-card::after {
+        border-radius: 12px;
+    }
+    
+    .meme-card img,
+    .meme-card video {
+        height: 250px;
+    }
+    
+    .video-wrapper {
+        height: 250px;
+    }
+    
+    .play-icon {
+        font-size: 4em;
+    }
+    
+    .video-badge {
+        padding: 6px 14px;
+        font-size: 0.8em;
+        top: 12px;
+        right: 12px;
+    }
+    
+    .meme-info {
+        padding: 14px;
+    }
+    
+    .meme-name {
+        font-size: 0.95em;
+    }
+    
+    .meme-date {
+        font-size: 0.8em;
+    }
+    
+    .vote-container {
+        margin-top: 10px;
+        padding-top: 10px;
+    }
+    
+    .vote-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+    }
+    
+    .vote-count {
+        font-size: 0.9em;
+    }
+    
+    /* Scroll to Top Button */
+    .scroll-to-top {
+        bottom: 15px;
+        right: 15px;
         width: 45px;
         height: 45px;
+        font-size: 20px;
+    }
+    
+    /* Upload Modal */
+    .upload-modal-content {
+        width: 95%;
+        max-width: 95%;
+        margin: 5% auto;
+        padding: 20px 15px;
+        border-radius: 12px;
+    }
+    
+    .upload-modal-content h2 {
+        font-size: 1.3em;
+        margin-bottom: 15px;
+    }
+    
+    .upload-modal-close {
+        font-size: 28px;
+        padding: 5px;
+    }
+    
+    .file-drop-zone {
+        padding: 30px 15px;
+        border-radius: 10px;
+    }
+    
+    .drop-icon {
+        font-size: 2.5em;
+    }
+    
+    .file-drop-zone p {
+        font-size: 0.95em;
+    }
+    
+    .drop-hint {
+        font-size: 0.8em;
+    }
+    
+    .form-group label {
+        font-size: 0.95em;
+    }
+    
+    #memeName {
+        padding: 10px 14px;
+        font-size: 15px;
+        border-radius: 8px;
+    }
+    
+    .upload-submit {
+        padding: 12px 20px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    
+    /* Loading and Empty States */
+    .loading,
+    .empty {
+        padding: 40px 15px;
+    }
+    
+    .loading-spinner {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .loading p,
+    .empty p {
+        font-size: 0.95em;
+    }
+    
+    .empty-icon {
+        font-size: 3.5em;
+    }
+    
+    /* Filter Indicator */
+    .filter-indicator {
+        padding: 10px 16px;
+        gap: 10px;
+        border-radius: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .filter-text {
+        font-size: 0.9em;
+    }
+    
+    /* Background Blobs - Further reduce for small screens */
+    .blob-1 {
+        width: 180px;
+        height: 180px;
+    }
+    
+    .blob-2 {
+        width: 220px;
+        height: 220px;
+    }
+    
+    .blob-3 {
+        width: 150px;
+        height: 150px;
+    }
+}
+
+/* Extra Small Devices (Landscape phones) */
+@media (max-width: 380px) {
+    header h1 {
+        font-size: 1.6em;
+    }
+    
+    .subtitle {
+        font-size: 0.95em;
+    }
+    
+    .meme-card img,
+    .meme-card video {
+        height: 220px;
+    }
+    
+    .video-wrapper {
+        height: 220px;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    /* Increase tap targets for touch devices */
+    .vote-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .scroll-to-top {
+        min-width: 48px;
+        min-height: 48px;
+    }
+    
+    .stat-badge {
+        min-height: 44px;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .meme-card:hover {
+        transform: translateY(0) translateZ(0) scale(1);
+    }
+    
+    .meme-card:hover img,
+    .meme-card:hover video {
+        transform: scale(1) translateZ(0);
+    }
+    
+    /* Make video overlay always visible on touch devices */
+    .video-overlay {
+        opacity: 1;
+    }
+    
+    .play-icon {
+        font-size: 4em;
+    }
+}
+
+/* High DPI / Retina Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .meme-card img,
+    .meme-card video {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Landscape Mode Optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+    header {
+        padding: 20px 15px;
+        margin-bottom: 15px;
+    }
+    
+    header h1 {
+        font-size: 2em;
+    }
+    
+    .header-stats {
+        flex-direction: row;
+        margin-top: 12px;
+    }
+    
+    .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 15px;
+    }
+    
+    .meme-card img,
+    .meme-card video {
+        height: 200px;
+    }
+    
+    .video-wrapper {
+        height: 200px;
+    }
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+/* Dark Mode Support for Mobile */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #0a5a63 0%, #1a3d47 50%, #2a2a2a 100%);
+    }
+    
+    header,
+    .controls {
+        background: linear-gradient(135deg, rgba(40, 40, 40, 0.95), rgba(30, 30, 30, 0.95));
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .meme-card {
+        background: #2a2a2a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .meme-info {
+        background: linear-gradient(135deg, #1a1a1a 0%, rgba(30, 30, 30, 0.95) 100%);
+    }
+    
+    .meme-name {
+        color: var(--color-secondary);
+    }
+    
+    .meme-date {
+        color: #aaa;
+    }
+    
+    #searchInput,
+    #sortSelect {
+        background: #2a2a2a;
+        color: #eee;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    #searchInput::placeholder {
+        color: #888;
+    }
+    
+    .upload-modal-content {
+        background: #2a2a2a;
+        color: #eee;
     }
 }
 
@@ -1387,5 +1980,72 @@ mark {
     }
     100% {
         transform: translateX(100%) translateY(100%);
+    }
+}
+
+/* ============================================
+   MOBILE-SPECIFIC PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* Improve scrolling performance on mobile */
+.gallery,
+.meme-card {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent text selection on interactive elements */
+.vote-btn,
+.upload-btn,
+#refreshBtn,
+.scroll-to-top,
+.stat-badge {
+    -webkit-tap-highlight-color: rgba(15, 163, 177, 0.2);
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+/* Safe area insets for notched devices (iPhone X+) */
+@supports (padding: max(0px)) {
+    body {
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+    
+    .scroll-to-top {
+        bottom: max(20px, env(safe-area-inset-bottom));
+        right: max(20px, env(safe-area-inset-right));
+    }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+    /* Fix iOS input zoom */
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+    
+    /* Prevent iOS from rounding corners */
+    input,
+    select,
+    button {
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    
+    /* Fix iOS momentum scrolling */
+    body {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Android specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) and (min-resolution: .001dpcm) {
+    /* Better text rendering on Android */
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 }

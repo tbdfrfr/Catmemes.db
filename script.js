@@ -633,3 +633,178 @@ document.addEventListener('keydown', (e) => {
         openUploadModal();
     }
 });
+
+// ============================================
+// MOBILE-SPECIFIC ENHANCEMENTS
+// ============================================
+
+// Detect if user is on mobile device
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+// Prevent pull-to-refresh on mobile when scrolling at the top
+let lastTouchY = 0;
+if (isTouchDevice) {
+    document.addEventListener('touchstart', (e) => {
+        lastTouchY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+        const touchY = e.touches[0].clientY;
+        const touchYDelta = touchY - lastTouchY;
+        lastTouchY = touchY;
+
+        if (window.scrollY === 0 && touchYDelta > 0) {
+            // Prevent pull-to-refresh
+            if (e.cancelable) {
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
+}
+
+// Add touch feedback for interactive elements
+if (isTouchDevice) {
+    const interactiveElements = document.querySelectorAll('.vote-btn, .upload-btn, #refreshBtn, .stat-badge');
+    
+    interactiveElements.forEach(element => {
+        element.addEventListener('touchstart', function() {
+            this.style.opacity = '0.7';
+        }, { passive: true });
+        
+        element.addEventListener('touchend', function() {
+            setTimeout(() => {
+                this.style.opacity = '1';
+            }, 100);
+        }, { passive: true });
+        
+        element.addEventListener('touchcancel', function() {
+            this.style.opacity = '1';
+        }, { passive: true });
+    });
+}
+
+// Optimize video loading on mobile
+function optimizeVideoForMobile() {
+    if (isMobile) {
+        const videos = document.querySelectorAll('.meme-card video');
+        videos.forEach(video => {
+            // Lazy load videos on mobile
+            video.setAttribute('preload', 'metadata');
+            video.setAttribute('playsinline', ''); // Prevent fullscreen on iOS
+            
+            // Pause videos when they go out of view
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting && !video.paused) {
+                        video.pause();
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            observer.observe(video);
+        });
+    }
+}
+
+// Call video optimization when memes are loaded
+const originalRenderMemes = renderMemes;
+renderMemes = function(memes) {
+    originalRenderMemes(memes);
+    if (isMobile) {
+        setTimeout(optimizeVideoForMobile, 100);
+    }
+};
+
+// Improve scroll performance on mobile
+let scrollTimeout;
+let isScrolling = false;
+
+window.addEventListener('scroll', () => {
+    if (!isScrolling) {
+        isScrolling = true;
+        document.body.classList.add('is-scrolling');
+    }
+    
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        isScrolling = false;
+        document.body.classList.remove('is-scrolling');
+    }, 150);
+}, { passive: true });
+
+// Add swipe gesture support for modal
+if (isTouchDevice && uploadModal) {
+    let touchStartY = 0;
+    let touchEndY = 0;
+    
+    uploadModal.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    uploadModal.addEventListener('touchend', (e) => {
+        touchEndY = e.changedTouches[0].clientY;
+        handleSwipeGesture();
+    }, { passive: true });
+    
+    function handleSwipeGesture() {
+        const swipeDistance = touchStartY - touchEndY;
+        
+        // Swipe down to close modal (at least 100px swipe)
+        if (swipeDistance < -100 && uploadModal.classList.contains('active')) {
+            closeUploadModal();
+        }
+    }
+}
+
+// Optimize search input on mobile
+if (isMobile && searchInput) {
+    // Debounce search input on mobile for better performance
+    let searchTimeout;
+    const originalSearchHandler = searchInput.oninput;
+    
+    searchInput.oninput = function(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (originalSearchHandler) {
+                originalSearchHandler.call(this, e);
+            }
+        }, 300); // 300ms debounce
+    };
+}
+
+// Handle orientation change
+window.addEventListener('orientationchange', () => {
+    // Reload gallery layout after orientation change
+    setTimeout(() => {
+        if (typeof filterMemes === 'function') {
+            filterMemes();
+        }
+    }, 100);
+});
+
+// Add double-tap to zoom prevention on interactive elements
+if (isTouchDevice) {
+    const preventDoubleTap = (element) => {
+        let lastTap = 0;
+        element.addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0) {
+                e.preventDefault();
+            }
+            lastTap = currentTime;
+        });
+    };
+    
+    const elements = document.querySelectorAll('.vote-btn, .upload-btn, #refreshBtn');
+    elements.forEach(preventDoubleTap);
+}
+
+// Log mobile device info for debugging
+if (isMobile) {
+    console.log('Mobile device detected');
+    console.log('Screen size:', window.innerWidth, 'x', window.innerHeight);
+    console.log('Device pixel ratio:', window.devicePixelRatio);
+    console.log('Touch support:', isTouchDevice);
+}
