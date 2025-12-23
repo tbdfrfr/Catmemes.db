@@ -16,17 +16,17 @@ const isMobile = window.innerWidth <= 768;
 let currentMobileIndex = 0;
 let touchStartY = 0;
 
-// DOM elements
-const gallery = document.getElementById('gallery');
+// DOM elements - conditionally set based on mobile/desktop
+const gallery = !isMobile ? document.getElementById('gallery') : null;
 const searchInput = document.getElementById('searchInput');
-const sortSelect = document.getElementById('sortSelect');
-const refreshBtn = document.getElementById('refreshBtn');
+const sortSelect = !isMobile ? document.getElementById('sortSelect') : null;
+const refreshBtn = !isMobile ? document.getElementById('refreshBtn') : null;
 const uploadBtn = document.getElementById('uploadBtn');
-const memeCount = document.getElementById('memeCount');
-const imageCount = document.getElementById('imageCount');
-const videoCount = document.getElementById('videoCount');
-const loading = document.getElementById('loading');
-const empty = document.getElementById('empty');
+const memeCount = !isMobile ? document.getElementById('memeCount') : null;
+const imageCount = !isMobile ? document.getElementById('imageCount') : null;
+const videoCount = !isMobile ? document.getElementById('videoCount') : null;
+const loading = !isMobile ? document.getElementById('loading') : null;
+const empty = !isMobile ? document.getElementById('empty') : null;
 
 // Upload modal elements
 const uploadModal = document.getElementById('uploadModal');
@@ -59,6 +59,19 @@ if (!isMobile) {
     searchInput.addEventListener('input', filterMemes);
     sortSelect.addEventListener('change', sortMemes);
     refreshBtn.addEventListener('click', loadMemes);
+    
+    // Stat badge click handlers for filtering
+    document.querySelector('.stat-badge:nth-child(1)').addEventListener('click', () => {
+        currentFilter = currentFilter === 'image' ? 'all' : 'image';
+        updateStatBadgeStyles();
+        filterMemes();
+    });
+
+    document.querySelector('.stat-badge:nth-child(2)').addEventListener('click', () => {
+        currentFilter = currentFilter === 'video' ? 'all' : 'video';
+        updateStatBadgeStyles();
+        filterMemes();
+    });
 }
 uploadBtn.addEventListener('click', openUploadModal);
 uploadModalClose.addEventListener('click', closeUploadModal);
@@ -66,19 +79,6 @@ dropZone.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', handleFileSelect);
 memeName.addEventListener('input', checkUploadReady);
 uploadSubmit.addEventListener('click', handleUpload);
-
-// Stat badge click handlers for filtering
-document.querySelector('.stat-badge:nth-child(1)').addEventListener('click', () => {
-    currentFilter = currentFilter === 'image' ? 'all' : 'image';
-    updateStatBadgeStyles();
-    filterMemes();
-});
-
-document.querySelector('.stat-badge:nth-child(2)').addEventListener('click', () => {
-    currentFilter = currentFilter === 'video' ? 'all' : 'video';
-    updateStatBadgeStyles();
-    filterMemes();
-});
 
 // Drag and drop handlers
 dropZone.addEventListener('dragover', (e) => {
@@ -321,6 +321,15 @@ function sortMemes() {
 }
 
 function displayMemes() {
+    if (isMobile) {
+        // On mobile, just render the first meme if available
+        if (filteredMemes.length > 0) {
+            currentMobileIndex = 0;
+            renderMobileMeme();
+        }
+        return;
+    }
+    
     gallery.innerHTML = '';
     displayedCount = 0;
     memeCount.textContent = filteredMemes.length;
