@@ -7,10 +7,9 @@ let allMemes = [];
 let filteredMemes = [];
 let currentFilter = 'all'; // 'all', 'image', 'video'
 let displayedCount = 0;
-const ITEMS_PER_PAGE = window.innerWidth < 768 ? 3 : 20; // Only 3 items on mobile
+const ITEMS_PER_PAGE = window.innerWidth < 768 ? 12 : 20; // Fewer items on mobile
 let isLoadingMore = false;
 let activeObservers = new Map(); // Track observers for cleanup
-let currentMobileIndex = 0; // Track position on mobile
 
 // DOM elements
 const gallery = document.getElementById('gallery');
@@ -298,12 +297,7 @@ function sortMemes() {
 function displayMemes() {
     gallery.innerHTML = '';
     displayedCount = 0;
-    currentMobileIndex = 0;
     memeCount.textContent = filteredMemes.length;
-    
-    // Clear all observers
-    activeObservers.forEach(observer => observer.disconnect());
-    activeObservers.clear();
     
     loadMoreMemes();
 }
@@ -312,45 +306,17 @@ function loadMoreMemes() {
     if (isLoadingMore || displayedCount >= filteredMemes.length) return;
     
     isLoadingMore = true;
+    const end = Math.min(displayedCount + ITEMS_PER_PAGE, filteredMemes.length);
     
-    // On mobile, use windowed loading (only keep 3 items)
-    if (window.innerWidth < 768) {
-        loadMobileWindow();
-    } else {
-        // Desktop: normal pagination
-        const end = Math.min(displayedCount + ITEMS_PER_PAGE, filteredMemes.length);
-        
-        requestAnimationFrame(() => {
-            for (let i = displayedCount; i < end; i++) {
-                const card = createMemeCard(filteredMemes[i]);
-                gallery.appendChild(card);
-            }
-            
-            displayedCount = end;
-            isLoadingMore = false;
-        });
-    }
-}
-
-function loadMobileWindow() {
-    // Clear existing cards
-    gallery.innerHTML = '';
-    activeObservers.forEach(observer => observer.disconnect());
-    activeObservers.clear();
-    
-    // Load previous, current, and next
-    const start = Math.max(0, currentMobileIndex - 1);
-    const end = Math.min(filteredMemes.length, currentMobileIndex + 2);
-    
+    // Use requestAnimationFrame for smoother rendering
     requestAnimationFrame(() => {
-        for (let i = start; i < end; i++) {
+        for (let i = displayedCount; i < end; i++) {
             const card = createMemeCard(filteredMemes[i]);
-            card.dataset.index = i;
             gallery.appendChild(card);
         }
         
-        isLoadingMore = false;
         displayedCount = end;
+        isLoadingMore = false;
     });
 }
 
@@ -359,73 +325,41 @@ function setupInfiniteScroll() {
     window.addEventListener('scroll', () => {
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
+            const scrollPosition = window.innerHeight + window.scrollY;
+            const threshold = document.documentElement.scrollHeight - 800; // Increased threshold
+            
+            if (scrollPosition >= threshold && !isLoadingMore) {
+                loadMoreMemes();
+            }
+            
+            // Clean up far away cards on mobile to save memory
             if (window.innerWidth < 768) {
-                // Mobile: detect which card is in view
-                handleMobileScroll();
-            } else {
-                // Desktop: normal infinite scroll
-                const scrollPosition = window.innerHeight + window.scrollY;
-                const threshold = document.documentElement.scrollHeight - 800;
-                
-                if (scrollPosition >= threshold && !isLoadingMore) {
-                    loadMoreMemes();
-                }
+                cleanupDistantCards();
             }
         }, 100);
     });
 }
 
-function handleMobileScroll() {
+function cleanupDistantCards() {
     const cards = gallery.querySelectorAll('.meme-card');
-    const viewportCenter = window.innerHeight / 2;
-    
-    let closestCard = null;
-    let closestDistance = Infinity;
+    const viewportHeight = window.innerHeight;
+    const scrollTop = window.scrollY;
     
     cards.forEach(card => {
         const rect = card.getBoundingClientRect();
-        const cardCenter = rect.top + rect.height / 2;
-        const distance = Math.abs(cardCenter - viewportCenter);
+        const cardTop = scrollTop + rect.top;
+        const distanceFromView = Math.abs(cardTop - scrollTop - viewportHeight / 2);
         
-        if (distance < closestDistance) {
-            closestDistance = distance;
-            closestCard = card;
+        // Remove cards that are more than 3 screens away
+        if (distanceFromView > viewportHeight * 3) {
+            const observer = activeObservers.get(card.querySelector('.video-wrapper'));
+            if (observer) {
+                observer.disconnect();
+                activeObservers.delete(card.querySelector('.video-wrapper'));
+            }
+            card.remove();
         }
     });
-    
-    if (closestCard) {
-        const newIndex = parseInt(closestCard.dataset.index);
-        if (newIndex !== currentMobileIndex) {
-            currentMobileIndex = newIndex;
-            // Reload window with new center
-            loadMobileWindow();
-        }
-    }
-}
-
-function cleanupDistantCards() {
-    // Not needed on mobile anymore - handled by windowed loading
-    if (window.innerWidth >= 768) {
-        const cards = gallery.querySelectorAll('.meme-card');
-        const viewportHeight = window.innerHeight;
-        const scrollTop = window.scrollY;
-        
-        cards.forEach(card => {
-            const rect = card.getBoundingClientRect();
-            const cardTop = scrollTop + rect.top;
-            const distanceFromView = Math.abs(cardTop - scrollTop - viewportHeight / 2);
-            
-            // Remove cards that are more than 3 screens away
-            if (distanceFromView > viewportHeight * 3) {
-                const observer = activeObservers.get(card.querySelector('.video-wrapper'));
-                if (observer) {
-                    observer.disconnect();
-                    activeObservers.delete(card.querySelector('.video-wrapper'));
-                }
-                card.remove();
-            }
-        });
-    }
 }
 
 function createMemeCard(meme) {
