@@ -675,12 +675,6 @@ main {
     font-weight: 500;
 }
 
-.meme-date::before {
-    content: '';
-    font-size: 0.95em;
-    filter: grayscale(0.3);
-}
-
 .vote-container {
     display: flex;
     align-items: center;
