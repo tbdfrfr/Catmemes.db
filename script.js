@@ -116,13 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function openUploadModal() {
-    console.log('Opening upload modal, uploadModal element:', uploadModal);
-    if (!uploadModal) {
-        console.error('Upload modal element not found!');
-        return;
-    }
     uploadModal.classList.add('active');
-    console.log('Modal classes after opening:', uploadModal.className);
     resetUploadForm();
 }
 
@@ -988,21 +982,6 @@ function setupMobileViewer() {
     const uploadBtn = document.getElementById('mobileUploadBtn');
     const likeBtn = document.getElementById('mobileLikeBtn');
     
-    // Add clear button to search
-    const searchContainer = searchInput.parentElement;
-    const clearBtn = document.createElement('button');
-    clearBtn.innerHTML = '✕';
-    clearBtn.style.cssText = 'position:absolute;right:58px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,0.3);color:white;font-size:16px;display:none;z-index:20;cursor:pointer;';
-    clearBtn.onclick = () => {
-        searchInput.value = '';
-        clearBtn.style.display = 'none';
-        filteredMemes = [...allMemes];
-        currentMobileIndex = 0;
-        renderMobileMeme();
-    };
-    searchContainer.style.position = 'relative';
-    searchContainer.appendChild(clearBtn);
-    
     // Swipe gestures
     container.addEventListener('touchstart', e => {
         touchStartY = e.touches[0].clientY;
@@ -1037,45 +1016,18 @@ function setupMobileViewer() {
         }
     });
     
-    // Search with clear button
+    // Search
     searchInput.addEventListener('input', () => {
         const query = searchInput.value.toLowerCase();
-        
-        // Show/hide clear button
-        clearBtn.style.display = query ? 'flex' : 'none';
-        
         filteredMemes = query ? allMemes.filter(m => m.name.toLowerCase().includes(query)) : [...allMemes];
         currentMobileIndex = 0;
-        if (filteredMemes.length > 0) {
-            renderMobileMeme();
-        } else {
-            // Show no results message
-            const container = document.querySelector('.mobile-media-container');
-            container.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#fff;font-size:18px;text-align:center;padding:20px;">No memes found 😿<br><small style="font-size:14px;opacity:0.7;margin-top:10px;display:block;">Try a different search</small></div>';
-        }
+        renderMobileMeme();
     });
     
-    // Clear search on double tap
-    let searchTapTimeout;
-    searchInput.addEventListener('focus', () => {
-        if (searchInput.value) {
-            searchInput.select();
-        }
-    });
+    // Upload
+    uploadBtn.addEventListener('click', openUploadModal);
     
-    // Upload button
-    if (uploadBtn) {
-        uploadBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Mobile upload button clicked, calling openUploadModal');
-            openUploadModal();
-        });
-    } else {
-        console.error('Mobile upload button not found!');
-    }
-    
-    // Like button
+    // Like
     likeBtn.addEventListener('click', handleMobileLike);
 }
 
