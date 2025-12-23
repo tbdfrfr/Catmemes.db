@@ -1073,28 +1073,17 @@ function renderMobileMeme() {
     likeBtn.dataset.filename = meme.filename;
 }
 
-async function handleMobileLike(e) {
-    e.stopPropagation(); // Prevent triggering video pause
-    const likeBtn = document.getElementById('mobileLikeBtn');
-    const filename = likeBtn.dataset.filename;
-    
-    if (!filename) {
-        console.log('No filename set');
-        return;
-    }
-    
-    if (checkIfVoted(filename)) {
-        console.log('Already voted for:', filename);
-        return;
-    }
+async function handleMobileLike() {
+    const filename = this.dataset.filename;
+    if (!filename || checkIfVoted(filename)) return;
     
     const success = await voteMeme(filename);
     if (success) {
-        markAsVoted(filename);
+        addVotedMeme(filename);
         const meme = filteredMemes[currentMobileIndex];
         meme.votes = (meme.votes || 0) + 1;
-        likeBtn.classList.add('liked');
-        likeBtn.querySelector('.mobile-vote-count').textContent = meme.votes;
+        this.classList.add('liked');
+        this.querySelector('.mobile-vote-count').textContent = meme.votes;
         
         // Heart animation
         const heart = document.createElement('div');

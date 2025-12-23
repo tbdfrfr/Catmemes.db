@@ -1019,7 +1019,7 @@ main {
 .upload-modal {
     display: none;
     position: fixed;
-    z-index: 20000;
+    z-index: 2000;
     top: 0;
     left: 0;
     width: 100%;
@@ -1321,14 +1321,7 @@ main {
         background: rgba(255,255,255,0.2);
         backdrop-filter: blur(10px);
         color: white;
-        font-size: 16px;
-        outline: none;
-        transition: all 0.3s ease;
-    }
-    
-    .mobile-search:focus {
-        background: rgba(255,255,255,0.3);
-        box-shadow: 0 0 0 2px rgba(15,163,177,0.5);
+        font-size: 14px;
     }
     
     .mobile-search::placeholder {
@@ -1347,15 +1340,6 @@ main {
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        -webkit-tap-highlight-color: transparent;
-        user-select: none;
-    }
-    
-    .mobile-upload-btn:active {
-        transform: scale(0.9);
-        background: rgba(255,255,255,0.3);
     }
     
     .mobile-media-container {
@@ -1398,10 +1382,6 @@ main {
         font-size: 28px;
         z-index: 10;
         transition: all 0.3s ease;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-        user-select: none;
-        border: none;
     }
     
     .mobile-like-btn:active {
@@ -1410,12 +1390,6 @@ main {
     
     .mobile-like-btn.liked {
         background: rgba(247,160,114,0.4);
-        animation: heartPulse 0.6s ease;
-    }
-    
-    @keyframes heartPulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
     }
     
     .mobile-vote-count {
@@ -1588,10 +1562,6 @@ main {
     }
     
     /* Upload Modal */
-    .upload-modal {
-        z-index: 20000 !important;
-    }
-    
     .upload-modal-content {
         width: 90%;
         max-width: 90%;
@@ -1798,14 +1768,8 @@ main {
     }
     
     .upload-modal-close {
-        font-size: 32px;
-        padding: 10px;
-        width: 44px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        -webkit-tap-highlight-color: transparent;
+        font-size: 28px;
+        padding: 5px;
     }
     
     .file-drop-zone {
