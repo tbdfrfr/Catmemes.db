@@ -349,36 +349,29 @@ function createMemeCard(meme) {
         mediaElement.loop = true;
         mediaElement.muted = true;
         mediaElement.playsInline = true;
-        mediaElement.preload = 'auto';
+        mediaElement.preload = 'metadata';
         mediaElement.style.backgroundColor = '#000';
         
-        // Aggressive loading for mobile - play then immediately pause
-        const forceLoadFrame = () => {
-            const playPromise = mediaElement.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    setTimeout(() => {
-                        mediaElement.pause();
-                        mediaElement.currentTime = 0;
-                    }, 100);
-                }).catch(() => {
-                    // If autoplay fails, try seeking
-                    mediaElement.currentTime = 0.1;
-                });
-            }
-        };
+        // Use Intersection Observer to autoplay when visible
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    mediaElement.play().catch(e => console.log('Autoplay prevented:', e));
+                } else {
+                    mediaElement.pause();
+                }
+            });
+        }, { threshold: 0.5 });
         
-        mediaElement.addEventListener('loadedmetadata', forceLoadFrame);
-        mediaElement.load();
+        observer.observe(videoWrapper);
         
-        // Auto-play on hover (desktop)
+        // Also play on hover for desktop
         videoWrapper.addEventListener('mouseenter', () => {
             mediaElement.play().catch(e => console.log('Play failed:', e));
         });
         
         videoWrapper.addEventListener('mouseleave', () => {
-            mediaElement.pause();
-            mediaElement.currentTime = 0;
+            // Don't pause on desktop hover out - let IntersectionObserver handle it
         });
         
         // Click to open fullscreen
