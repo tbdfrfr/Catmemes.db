@@ -7,8 +7,9 @@ let allMemes = [];
 let filteredMemes = [];
 let currentFilter = 'all'; // 'all', 'image', 'video'
 let displayedCount = 0;
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = window.innerWidth < 768 ? 12 : 20; // Fewer items on mobile
 let isLoadingMore = false;
+let activeObservers = new Map(); // Track observers for cleanup
 
 // DOM elements
 const gallery = document.getElementById('gallery');
@@ -325,12 +326,39 @@ function setupInfiniteScroll() {
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
             const scrollPosition = window.innerHeight + window.scrollY;
-            const threshold = document.documentElement.scrollHeight - 500;
+            const threshold = document.documentElement.scrollHeight - 800; // Increased threshold
             
             if (scrollPosition >= threshold && !isLoadingMore) {
                 loadMoreMemes();
             }
+            
+            // Clean up far away cards on mobile to save memory
+            if (window.innerWidth < 768) {
+                cleanupDistantCards();
+            }
         }, 100);
+    });
+}
+
+function cleanupDistantCards() {
+    const cards = gallery.querySelectorAll('.meme-card');
+    const viewportHeight = window.innerHeight;
+    const scrollTop = window.scrollY;
+    
+    cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const cardTop = scrollTop + rect.top;
+        const distanceFromView = Math.abs(cardTop - scrollTop - viewportHeight / 2);
+        
+        // Remove cards that are more than 3 screens away
+        if (distanceFromView > viewportHeight * 3) {
+            const observer = activeObservers.get(card.querySelector('.video-wrapper'));
+            if (observer) {
+                observer.disconnect();
+                activeObservers.delete(card.querySelector('.video-wrapper'));
+            }
+            card.remove();
+        }
     });
 }
 
@@ -345,25 +373,41 @@ function createMemeCard(meme) {
         videoWrapper.className = 'video-wrapper';
         
         mediaElement = document.createElement('video');
-        mediaElement.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
+        mediaElement.dataset.src = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`; // Store URL in dataset
         mediaElement.loop = true;
         mediaElement.muted = true;
         mediaElement.playsInline = true;
-        mediaElement.preload = 'metadata';
+        mediaElement.preload = 'none';
         mediaElement.style.backgroundColor = '#000';
         
-        // Use Intersection Observer to autoplay when visible
+        // Use Intersection Observer to autoplay and manage memory
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
+                    // Load and play when visible
+                    if (!mediaElement.src) {
+                        mediaElement.src = mediaElement.dataset.src;
+                        mediaElement.load();
+                    }
                     mediaElement.play().catch(e => console.log('Autoplay prevented:', e));
                 } else {
+                    // Pause and unload when far away
                     mediaElement.pause();
+                    const rect = entry.boundingClientRect;
+                    const viewportHeight = window.innerHeight;
+                    const distanceFromView = Math.abs(rect.top - viewportHeight / 2);
+                    
+                    // Unload video if it's more than 2 screens away
+                    if (distanceFromView > viewportHeight * 2) {
+                        mediaElement.src = '';
+                        mediaElement.load(); // Force unload
+                    }
                 }
             });
-        }, { threshold: 0.5 });
+        }, { threshold: 0.25, rootMargin: '100px' });
         
         observer.observe(videoWrapper);
+        activeObservers.set(videoWrapper, observer);
         
         // Also play on hover for desktop
         videoWrapper.addEventListener('mouseenter', () => {
