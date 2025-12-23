@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Cat Memes</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .meme-card { border: 1px solid #ccc; padding: 10px; margin: 10px; display: inline-block; }
+        .meme-card img { max-width: 300px; display: block; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Cat Memes Debug Page</h1>
+    <div id="status">Loading...</div>
+    <div id="gallery"></div>
+
+    <script>
+        const API_BASE_URL = 'https://catmemesdb-production.up.railway.app';
+        
+        async function loadMemes() {
+            const statusDiv = document.getElementById('status');
+            const galleryDiv = document.getElementById('gallery');
+            
+            try {
+                statusDiv.textContent = `Fetching from: ${API_BASE_URL}/api/memes`;
+                const response = await fetch(`${API_BASE_URL}/api/memes`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                statusDiv.innerHTML = `<span class="success">Loaded ${data.memes.length} memes successfully!</span>`;
+                
+                // Show first 10 memes
+                data.memes.slice(0, 10).forEach(meme => {
+                    const card = document.createElement('div');
+                    card.className = 'meme-card';
+                    
+                    const title = document.createElement('div');
+                    title.textContent = meme.name;
+                    card.appendChild(title);
+                    
+                    const filename = document.createElement('div');
+                    filename.style.fontSize = '10px';
+                    filename.style.color = '#666';
+                    filename.textContent = `File: ${meme.filename}`;
+                    card.appendChild(filename);
+                    
+                    if (meme.type === 'image') {
+                        const img = document.createElement('img');
+                        const imageUrl = `${API_BASE_URL}/memes/${encodeURIComponent(meme.filename)}`;
+                        img.src = imageUrl;
+                        img.alt = meme.name;
+                        
+                        const urlDiv = document.createElement('div');
+                        urlDiv.style.fontSize = '10px';
+                        urlDiv.style.wordBreak = 'break-all';
+                        urlDiv.textContent = `URL: ${imageUrl}`;
+                        card.appendChild(urlDiv);
+                        
+                        img.onerror = () => {
+                            const error = document.createElement('div');
+                            error.className = 'error';
+                            error.textContent = 'Failed to load image';
+                            card.appendChild(error);
+                        };
+                        
+                        img.onload = () => {
+                            const success = document.createElement('div');
+                            success.className = 'success';
+                            success.textContent = '✓ Loaded';
+                            card.appendChild(success);
+                        };
+                        
+                        card.appendChild(img);
+                    }
+                    
+                    galleryDiv.appendChild(card);
+                });
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                console.error('Error:', error);
+            }
+        }
+        
+        loadMemes();
+    </script>
+</body>
+</html>
