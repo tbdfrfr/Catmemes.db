@@ -996,11 +996,6 @@ function setupMobileViewer() {
             // Enable sound after first swipe
             if (mobileVideosMuted) {
                 mobileVideosMuted = false;
-                const soundBtn = document.getElementById('mobileSoundBtn');
-                if (soundBtn) {
-                    soundBtn.textContent = '🔊';
-                    soundBtn.classList.add('sound-on');
-                }
                 // Unmute current video if it exists
                 const currentVideo = container.querySelector('video');
                 if (currentVideo) {
@@ -1025,11 +1020,6 @@ function setupMobileViewer() {
             // Enable sound on tap
             if (mobileVideosMuted) {
                 mobileVideosMuted = false;
-                const soundBtn = document.getElementById('mobileSoundBtn');
-                if (soundBtn) {
-                    soundBtn.textContent = '🔊';
-                    soundBtn.classList.add('sound-on');
-                }
             }
             video.muted = false;
             
@@ -1054,23 +1044,6 @@ function setupMobileViewer() {
     
     // Like
     likeBtn.addEventListener('click', handleMobileLike);
-    
-    // Sound toggle button
-    const soundBtn = document.getElementById('mobileSoundBtn');
-    if (soundBtn) {
-        soundBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            mobileVideosMuted = !mobileVideosMuted;
-            soundBtn.textContent = mobileVideosMuted ? '🔇' : '🔊';
-            soundBtn.classList.toggle('sound-on', !mobileVideosMuted);
-            
-            // Update current video
-            const video = container.querySelector('video');
-            if (video) {
-                video.muted = mobileVideosMuted;
-            }
-        });
-    }
 }
 
 function renderMobileMeme() {
@@ -1100,11 +1073,6 @@ function renderMobileMeme() {
             if (!mobileVideosMuted) {
                 media.muted = true;
                 mobileVideosMuted = true; // Update global state
-                const soundBtn = document.getElementById('mobileSoundBtn');
-                if (soundBtn) {
-                    soundBtn.textContent = '🔇';
-                    soundBtn.classList.remove('sound-on');
-                }
                 media.play().catch(e => console.log('Muted autoplay also failed:', e));
             }
         });
