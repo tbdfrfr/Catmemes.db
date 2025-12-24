@@ -1050,13 +1050,16 @@ function renderMobileMeme() {
         media.autoplay = true;
         media.loop = true;
         media.playsInline = true;
-        media.muted = false; // Enable sound for mobile
+        media.muted = true; // Start muted for autoplay
         
-        // Try to play with sound, fallback to muted if blocked
-        media.play().catch(err => {
-            console.log('Autoplay with sound blocked, trying muted:', err);
-            media.muted = true;
-            media.play().catch(e => console.log('Muted autoplay also failed:', e));
+        // Play muted first, then immediately unmute after autoplay succeeds
+        media.play().then(() => {
+            // Unmute after a short delay to ensure playback started
+            setTimeout(() => {
+                media.muted = false;
+            }, 100);
+        }).catch(err => {
+            console.log('Autoplay failed:', err);
         });
     } else {
         media = document.createElement('img');
