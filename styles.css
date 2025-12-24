@@ -1364,6 +1364,35 @@ main {
         object-fit: cover;
     }
     
+    .mobile-sound-btn {
+        position: absolute;
+        right: 15px;
+        bottom: 210px;
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 50%;
+        border: none;
+        color: white;
+        font-size: 24px;
+        z-index: 10;
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .mobile-sound-btn:active {
+        transform: scale(0.9);
+    }
+    
+    .mobile-sound-btn.sound-on {
+        background: rgba(15,163,177,0.6);
+    }
+    
     .mobile-like-btn {
         position: absolute;
         right: 15px;
