@@ -18,7 +18,6 @@ let activeObservers = new Map(); // Track observers for cleanup
 const isMobile = window.innerWidth <= 768;
 let currentMobileIndex = 0;
 let touchStartY = 0;
-let hasUserInteracted = false; // Track if user has interacted for sound
 
 // DOM elements - will be initialized after DOMContentLoaded
 let gallery, searchInput, sortSelect, refreshBtn, uploadBtn, memeCount, imageCount, videoCount, loading, empty;
@@ -993,19 +992,10 @@ function setupMobileViewer() {
         const diff = touchStartY - touchEndY;
         
         if (Math.abs(diff) > 50) {
-            // Mark that user has interacted
-            if (!hasUserInteracted) {
-                hasUserInteracted = true;
-                // Unmute current video if playing
-                const currentVideo = container.querySelector('video');
-                if (currentVideo) {
-                    currentVideo.muted = false;
-                }
-            }
-            
             if (diff > 0 && currentMobileIndex < filteredMemes.length - 1) {
                 currentMobileIndex++;
                 renderMobileMeme();
+                // After user interaction, subsequent videos can play with sound
             } else if (diff < 0 && currentMobileIndex > 0) {
                 currentMobileIndex--;
                 renderMobileMeme();
@@ -1017,11 +1007,8 @@ function setupMobileViewer() {
     container.addEventListener('click', e => {
         const video = container.querySelector('video');
         if (video) {
-            // Mark user interaction and unmute
-            hasUserInteracted = true;
-            video.muted = false;
-            
             if (video.paused) {
+                video.muted = false; // Ensure sound is on when user interacts
                 video.play();
             } else {
                 video.pause();
@@ -1063,13 +1050,11 @@ function renderMobileMeme() {
         media.autoplay = true;
         media.loop = true;
         media.playsInline = true;
+        media.muted = false; // Enable sound for mobile
         
-        // If user has interacted, play with sound; otherwise muted
-        media.muted = !hasUserInteracted;
-        
+        // Try to play with sound, fallback to muted if blocked
         media.play().catch(err => {
-            console.log('Autoplay failed:', err);
-            // Fallback to muted if unmuted autoplay fails
+            console.log('Autoplay with sound blocked, trying muted:', err);
             media.muted = true;
             media.play().catch(e => console.log('Muted autoplay also failed:', e));
         });
