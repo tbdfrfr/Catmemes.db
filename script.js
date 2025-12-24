@@ -1039,8 +1039,62 @@ function setupMobileViewer() {
         renderMobileMeme();
     });
     
-    // Upload
-    uploadBtn.addEventListener('click', openUploadModal);
+    // Upload - mobile optimized
+    uploadBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        // On mobile, directly trigger file picker
+        if (isMobile) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*,video/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Auto-generate name from filename
+                const defaultName = file.name.replace(/\.[^/.]+$/, '');
+                
+                // Ask user for custom name
+                const customName = prompt('Name your meme:', defaultName);
+                if (!customName || !customName.trim()) {
+                    // User cancelled or entered empty name
+                    return;
+                }
+                
+                // Get file extension
+                const extension = file.name.split('.').pop();
+                const finalFilename = `${customName.trim()}.${extension}`;
+                
+                // Create FormData and upload
+                const formData = new FormData();
+                formData.append('meme', file, finalFilename);
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        // Reload memes
+                        await loadMemes();
+                        alert('✅ Uploaded successfully!');
+                    } else {
+                        const error = await response.json();
+                        alert('Upload failed: ' + (error.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Upload failed! Make sure you have internet connection.');
+                }
+            };
+            input.click();
+        } else {
+            openUploadModal();
+        }
+    });
     
     // Like
     likeBtn.addEventListener('click', handleMobileLike);
