@@ -18,6 +18,7 @@ let activeObservers = new Map(); // Track observers for cleanup
 const isMobile = window.innerWidth <= 768;
 let currentMobileIndex = 0;
 let touchStartY = 0;
+let mobileSoundEnabled = false; // Track sound preference
 
 // DOM elements - will be initialized after DOMContentLoaded
 let gallery, searchInput, sortSelect, refreshBtn, uploadBtn, memeCount, imageCount, videoCount, loading, empty;
@@ -992,10 +993,24 @@ function setupMobileViewer() {
         const diff = touchStartY - touchEndY;
         
         if (Math.abs(diff) > 50) {
+            // Enable sound after first swipe
+            if (!mobileSoundEnabled) {
+                mobileSoundEnabled = true;
+                const soundBtn = document.getElementById('mobileSoundBtn');
+                if (soundBtn) {
+                    soundBtn.textContent = '🔊';
+                    soundBtn.classList.add('sound-on');
+                }
+                // Unmute current video if it's playing
+                const currentVideo = container.querySelector('video');
+                if (currentVideo) {
+                    currentVideo.muted = false;
+                }
+            }
+            
             if (diff > 0 && currentMobileIndex < filteredMemes.length - 1) {
                 currentMobileIndex++;
                 renderMobileMeme();
-                // After user interaction, subsequent videos can play with sound
             } else if (diff < 0 && currentMobileIndex > 0) {
                 currentMobileIndex--;
                 renderMobileMeme();
@@ -1007,8 +1022,15 @@ function setupMobileViewer() {
     container.addEventListener('click', e => {
         const video = container.querySelector('video');
         if (video) {
+            mobileSoundEnabled = true;
+            const soundBtn = document.getElementById('mobileSoundBtn');
+            if (soundBtn) {
+                soundBtn.textContent = '🔊';
+                soundBtn.classList.add('sound-on');
+            }
+            video.muted = false;
+            
             if (video.paused) {
-                video.muted = false; // Ensure sound is on when user interacts
                 video.play();
             } else {
                 video.pause();
@@ -1029,6 +1051,23 @@ function setupMobileViewer() {
     
     // Like
     likeBtn.addEventListener('click', handleMobileLike);
+    
+    // Sound toggle button
+    const soundBtn = document.getElementById('mobileSoundBtn');
+    if (soundBtn) {
+        soundBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mobileSoundEnabled = !mobileSoundEnabled;
+            soundBtn.textContent = mobileSoundEnabled ? '🔊' : '🔇';
+            soundBtn.classList.toggle('sound-on', mobileSoundEnabled);
+            
+            // Update current video if playing
+            const video = container.querySelector('video');
+            if (video) {
+                video.muted = !mobileSoundEnabled;
+            }
+        });
+    }
 }
 
 function renderMobileMeme() {
@@ -1050,13 +1089,15 @@ function renderMobileMeme() {
         media.autoplay = true;
         media.loop = true;
         media.playsInline = true;
-        media.muted = false; // Enable sound for mobile
+        media.muted = !mobileSoundEnabled; // Use sound preference
         
-        // Try to play with sound, fallback to muted if blocked
         media.play().catch(err => {
-            console.log('Autoplay with sound blocked, trying muted:', err);
-            media.muted = true;
-            media.play().catch(e => console.log('Muted autoplay also failed:', e));
+            console.log('Autoplay failed:', err);
+            if (!media.muted) {
+                // If unmuted autoplay fails, try muted
+                media.muted = true;
+                media.play().catch(e => console.log('Muted autoplay also failed:', e));
+            }
         });
     } else {
         media = document.createElement('img');
